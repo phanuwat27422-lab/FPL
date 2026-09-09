@@ -4,6 +4,8 @@
 
 import { getSupabase } from '../lib/supabase.js';
 
+const BONUS_POOL = 150; // เต็ม 1 ชนะ = ได้ครบ 150; เสมอ 2 คนได้คนละ 75 = นับเป็น 0.5 ชนะ
+
 export default async function handler(req, res) {
   try {
     const supabase = getSupabase();
@@ -26,6 +28,7 @@ export default async function handler(req, res) {
         teamName: m.team_name,
         managerName: m.manager_name,
         totalBonus: 0,
+        winsCount: 0,
         wins: [],
       };
     }
@@ -35,8 +38,13 @@ export default async function handler(req, res) {
       if (!bucket) continue;
       bucket.totalBonus += w.bonus_awarded;
       if (w.bonus_awarded > 0) {
+        bucket.winsCount += w.bonus_awarded / BONUS_POOL;
         bucket.wins.push({ gameweek: w.gameweek, gwPoints: w.gw_points, bonus: w.bonus_awarded });
       }
+    }
+
+    for (const bucket of Object.values(byEntry)) {
+      bucket.winsCount = Math.round(bucket.winsCount * 100) / 100;
     }
 
     const leaderboard = Object.values(byEntry).sort((a, b) => b.totalBonus - a.totalBonus);
