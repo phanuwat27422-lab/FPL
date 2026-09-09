@@ -131,13 +131,8 @@
   tbody tr.rank-1 td:first-child { box-shadow: inset 3px 0 0 var(--gold); }
 
   .rank { width: 30px; text-align: center; color: var(--muted); font-weight: 600; font-size: 12.5px; }
+  .rank-medal { font-size: 18px; }
 
-  .crest {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 24px; height: 24px; border-radius: 50%;
-    font-size: 10px; font-weight: 700; color: #0d1117;
-    margin-right: 8px; vertical-align: middle;
-  }
   .team-cell { display: flex; align-items: center; }
   .team-text { display: flex; flex-direction: column; line-height: 1.25; }
   .team { font-weight: 600; font-size: 13.5px; color: #fff; }
@@ -258,14 +253,11 @@
 
   <script>
     const LEAGUE_ID = '477187';
-    const CREST_COLORS = ['#ff5a1f', '#4ea1ff', '#ffc93c', '#8b5cf6', '#22c55e', '#f472b6', '#38bdf8', '#fb923c'];
+    const MEDALS = ['🥇', '🥈', '🥉'];
 
-    function crestOf(name) {
-      let hash = 0;
-      for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
-      const color = CREST_COLORS[Math.abs(hash) % CREST_COLORS.length];
-      const initials = name.replace(/[^a-zA-Z0-9ก-๙]/g, '').slice(0, 2).toUpperCase();
-      return `<span class="crest" style="background:${color}">${initials}</span>`;
+    function rankCell(i) {
+      if (i < 3) return `<span class="rank-medal">${MEDALS[i]}</span>`;
+      return `${i + 1}`;
     }
 
     document.querySelectorAll('.tab-btn').forEach((btn) => {
@@ -299,10 +291,9 @@
           .map(
             (r, i) => `
           <tr class="${i === 0 ? 'rank-1' : ''}">
-            <td class="rank">${i + 1}</td>
+            <td class="rank">${rankCell(i)}</td>
             <td>
               <div class="team-cell">
-                ${crestOf(r.teamName)}
                 <div class="team-text">
                   <span class="team">${r.teamName}</span>
                   <span class="manager">${r.managerName}</span>
@@ -349,10 +340,9 @@
           .map(
             (r, i) => `
           <tr class="${i === 0 ? 'rank-1' : ''}">
-            <td class="rank">${i + 1}</td>
+            <td class="rank">${rankCell(i)}</td>
             <td>
               <div class="team-cell">
-                ${crestOf(r.teamName)}
                 <div class="team-text">
                   <span class="team">${r.teamName}</span>
                   <span class="manager">${r.managerName}</span>
