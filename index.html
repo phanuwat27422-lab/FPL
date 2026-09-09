@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FPL League Scoreboard</title>
+<style>
+  :root {
+    --bg: #0f1420;
+    --card: #1a2236;
+    --accent: #37003c;
+    --text: #e8eaf0;
+    --muted: #9aa1b5;
+    --green: #37f09a;
+    --amber: #ffc84a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    margin: 0;
+    padding: 24px 16px 60px;
+  }
+  .wrap { max-width: 640px; margin: 0 auto; }
+  h1 { font-size: 20px; font-weight: 600; margin: 0 0 4px; }
+  h2 { font-size: 15px; font-weight: 600; margin: 32px 0 10px; color: var(--text); }
+  .sub { color: var(--muted); font-size: 13px; margin-bottom: 16px; }
+  .banner {
+    background: linear-gradient(0deg, rgba(255,200,74,0.08), rgba(255,200,74,0.08)), var(--card);
+    border: 1px solid rgba(255,200,74,0.35);
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 13px;
+    margin-bottom: 20px;
+  }
+  .banner b { color: var(--amber); }
+  table { width: 100%; border-collapse: collapse; background: var(--card); border-radius: 10px; overflow: hidden; }
+  th, td { padding: 10px 12px; text-align: left; font-size: 14px; }
+  th { background: var(--accent); color: #fff; font-weight: 500; font-size: 12px; text-transform: uppercase; letter-spacing: 0.03em; }
+  tbody tr:not(:last-child) { border-bottom: 1px solid rgba(255,255,255,0.06); }
+  tbody tr:hover { background: rgba(255,255,255,0.03); }
+  .rank { font-weight: 600; color: var(--muted); width: 40px; }
+  .team { font-weight: 600; }
+  .manager { color: var(--muted); font-size: 12px; }
+  .points { text-align: right; font-weight: 600; }
+  .gw { text-align: right; color: var(--green); }
+  .bonus { text-align: right; color: var(--amber); font-weight: 600; }
+  .status { color: var(--muted); font-size: 13px; padding: 20px 0; text-align: center; }
+  .updated { color: var(--muted); font-size: 12px; margin-top: 10px; text-align: right; }
+  .footnote { color: var(--muted); font-size: 12px; margin-top: 24px; line-height: 1.6; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1 id="league-name">FPL League Scoreboard</h1>
+    <div class="sub">คะแนนจากลีก Fantasy Premier League + คะแนนพิเศษที่เล่นกันเอง</div>
+
+    <div id="leader-banner" class="banner" style="display:none"></div>
+
+    <h2>อันดับตารางรวม FPL</h2>
+    <div id="standings-status" class="status">กำลังโหลด...</div>
+    <table id="standings-table" style="display:none">
+      <thead>
+        <tr>
+          <th class="rank">อันดับ</th>
+          <th>ทีม</th>
+          <th class="gw">GW</th>
+          <th class="points">รวม</th>
+        </tr>
+      </thead>
+      <tbody id="standings-body"></tbody>
+    </table>
+    <div id="standings-updated" class="updated"></div>
+
+    <h2>ตารางแต้มพิเศษสะสม</h2>
+    <div id="bonus-status" class="status">กำลังโหลด...</div>
+    <table id="bonus-table" style="display:none">
+      <thead>
+        <tr>
+          <th class="rank">อันดับ</th>
+          <th>ทีม</th>
+          <th>ชนะกี่สัปดาห์</th>
+          <th class="bonus">แต้มสะสม</th>
+        </tr>
+      </thead>
+      <tbody id="bonus-body"></tbody>
+    </table>
+    <div id="bonus-updated" class="updated"></div>
+
+    <div class="footnote">
+      กติกา: ใครทำแต้ม gameweek สูงสุดในสัปดาห์นั้นได้ 150 แต้มพิเศษ (ถ้าเสมอแบ่งกันคนละเท่าๆ กัน)
+      แต้มพิเศษนี้ไม่เกี่ยวกับคะแนน FPL จริง เก็บสะสมไว้ตัดสินของขวัญปลายปี
+      ตารางบนอัปเดตสดทุก 30 นาที ส่วนตารางแต้มพิเศษจะล็อกให้ก็ต่อเมื่อสัปดาห์นั้นจบสมบูรณ์แล้วเท่านั้น
+    </div>
+  </div>
+
+  <script>
+    const LEAGUE_ID = '477187';
+
+    async function loadStandings() {
+      const statusEl = document.getElementById('standings-status');
+      const tableEl = document.getElementById('standings-table');
+      const tbody = document.getElementById('standings-body');
+      const bannerEl = document.getElementById('leader-banner');
+
+      try {
+        const res = await fetch(`/api/standings?league=${LEAGUE_ID}`);
+        if (!res.ok) throw new Error('โหลดข้อมูลไม่สำเร็จ');
+        const data = await res.json();
+
+        if (data.leagueName) {
+          document.getElementById('league-name').textContent = data.leagueName;
+        }
+
+        tbody.innerHTML = data.results
+          .map(
+            (r) => `
+          <tr>
+            <td class="rank">${r.rank}</td>
+            <td>
+              <div class="team">${r.teamName}</div>
+              <div class="manager">${r.managerName}</div>
+            </td>
+            <td class="gw">${r.gwPoints}</td>
+            <td class="points">${r.totalPoints}</td>
+          </tr>`
+          )
+          .join('');
+
+        if (data.currentLeaders && data.currentLeaders.length > 0) {
+          const names = data.currentLeaders.map((l) => l.teamName).join(', ');
+          bannerEl.innerHTML = `กำลังนำอยู่ตอนนี้ (ยังไม่ล็อกแต้มพิเศษ): <b>${names}</b> — ${data.currentLeaders[0].gwPoints} แต้ม`;
+          bannerEl.style.display = 'block';
+        }
+
+        statusEl.style.display = 'none';
+        tableEl.style.display = 'table';
+        document.getElementById('standings-updated').textContent =
+          'อัปเดตล่าสุด: ' + new Date(data.updatedAt).toLocaleString('th-TH');
+      } catch (err) {
+        statusEl.textContent = 'เกิดข้อผิดพลาด: ' + err.message;
+      }
+    }
+
+    async function loadBonus() {
+      const statusEl = document.getElementById('bonus-status');
+      const tableEl = document.getElementById('bonus-table');
+      const tbody = document.getElementById('bonus-body');
+
+      try {
+        const res = await fetch('/api/bonus');
+        if (!res.ok) throw new Error('โหลดข้อมูลไม่สำเร็จ');
+        const data = await res.json();
+
+        if (data.leaderboard.length === 0) {
+          statusEl.textContent = 'ยังไม่มีสัปดาห์ไหนล็อกแต้มพิเศษ รอ gameweek แรกจบก่อนนะครับ';
+          return;
+        }
+
+        tbody.innerHTML = data.leaderboard
+          .map(
+            (r, i) => `
+          <tr>
+            <td class="rank">${i + 1}</td>
+            <td>
+              <div class="team">${r.teamName}</div>
+              <div class="manager">${r.managerName}</div>
+            </td>
+            <td>${r.wins.length}</td>
+            <td class="bonus">${r.totalBonus}</td>
+          </tr>`
+          )
+          .join('');
+
+        statusEl.style.display = 'none';
+        tableEl.style.display = 'table';
+        document.getElementById('bonus-updated').textContent =
+          'อัปเดตล่าสุด: ' + new Date(data.updatedAt).toLocaleString('th-TH');
+      } catch (err) {
+        statusEl.textContent = 'เกิดข้อผิดพลาด: ' + err.message;
+      }
+    }
+
+    loadStandings();
+    loadBonus();
+    setInterval(loadStandings, 5 * 60 * 1000);
+    setInterval(loadBonus, 5 * 60 * 1000);
+  </script>
+</body>
+</html>
