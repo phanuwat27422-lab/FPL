@@ -170,6 +170,26 @@
     padding-top: 16px;
     border-top: 1px dashed rgba(255,255,255,0.15);
   }
+
+  .feed-card {
+    background: var(--card);
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 10px;
+    border-left: 4px solid var(--muted);
+  }
+  .feed-card.steal { border-left-color: var(--pink); }
+  .feed-card.tie { border-left-color: var(--cyan); }
+  .feed-card.normal { border-left-color: var(--lime); }
+  .feed-gw {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .feed-msg { font-size: 14px; line-height: 1.6; }
 </style>
 </head>
 <body>
@@ -190,6 +210,7 @@
     <div class="tabs">
       <button class="tab-btn active" data-tab="standings">อันดับตารางรวม FPL</button>
       <button class="tab-btn" data-tab="bonus">รายได้สะสม</button>
+      <button class="tab-btn" data-tab="feed">ไฮไลท์</button>
     </div>
 
     <div id="panel-standings" class="tab-panel active">
@@ -222,6 +243,11 @@
         <tbody id="bonus-body"></tbody>
       </table>
       <div id="bonus-updated" class="updated"></div>
+    </div>
+
+    <div id="panel-feed" class="tab-panel">
+      <div id="feed-status" class="status">กำลังโหลด...</div>
+      <div id="feed-list"></div>
     </div>
 
     <div class="footnote">
@@ -333,10 +359,42 @@
       }
     }
 
+    async function loadFeed() {
+      const statusEl = document.getElementById('feed-status');
+      const listEl = document.getElementById('feed-list');
+
+      try {
+        const res = await fetch('/api/feed');
+        if (!res.ok) throw new Error('โหลดข้อมูลไม่สำเร็จ');
+        const data = await res.json();
+
+        if (data.feed.length === 0) {
+          statusEl.textContent = 'ยังไม่มีไฮไลท์ รอ gameweek แรกจบก่อนนะครับ';
+          return;
+        }
+
+        listEl.innerHTML = data.feed
+          .map(
+            (f) => `
+          <div class="feed-card ${f.type}">
+            <div class="feed-gw">Gameweek ${f.gameweek}</div>
+            <div class="feed-msg">${f.message}</div>
+          </div>`
+          )
+          .join('');
+
+        statusEl.style.display = 'none';
+      } catch (err) {
+        statusEl.textContent = 'เกิดข้อผิดพลาด: ' + err.message;
+      }
+    }
+
     loadStandings();
     loadBonus();
+    loadFeed();
     setInterval(loadStandings, 5 * 60 * 1000);
     setInterval(loadBonus, 5 * 60 * 1000);
+    setInterval(loadFeed, 5 * 60 * 1000);
   </script>
 </body>
 </html>
