@@ -24,11 +24,20 @@ create table if not exists processed_gameweeks (
   locked_at timestamptz not null default now()
 );
 
+create table if not exists gw_leader_snapshots (
+  gameweek int primary key,
+  leader_entry_ids text not null,
+  leader_points int not null,
+  captured_at timestamptz not null default now()
+);
+
 -- เปิด Row Level Security แล้วอนุญาตให้ "อ่านอย่างเดียว" แบบ public
 -- การเขียน/แก้ไข ทำผ่าน service role key จาก serverless function เท่านั้น (ฝั่ง client แตะไม่ถึง)
 alter table managers enable row level security;
 alter table weekly_results enable row level security;
 alter table processed_gameweeks enable row level security;
+alter table gw_leader_snapshots enable row level security;
 
 create policy "public read managers" on managers for select using (true);
 create policy "public read weekly_results" on weekly_results for select using (true);
+create policy "public read gw_leader_snapshots" on gw_leader_snapshots for select using (true);
