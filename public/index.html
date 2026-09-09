@@ -189,7 +189,7 @@
 
     <div class="tabs">
       <button class="tab-btn active" data-tab="standings">อันดับตารางรวม FPL</button>
-      <button class="tab-btn" data-tab="bonus">เงินสะสม</button>
+      <button class="tab-btn" data-tab="bonus">รายได้สะสม</button>
     </div>
 
     <div id="panel-standings" class="tab-panel active">
@@ -216,7 +216,7 @@
             <th class="rank">#</th>
             <th>ทีม</th>
             <th>ชนะ</th>
-            <th class="bonus">เงินสะสม</th>
+            <th class="bonus">รายได้สะสม</th>
           </tr>
         </thead>
         <tbody id="bonus-body"></tbody>
@@ -225,7 +225,6 @@
     </div>
 
     <div class="footnote">
--
     </div>
   </div>
 
@@ -263,7 +262,9 @@
           document.getElementById('league-name').textContent = data.leagueName;
         }
 
-        tbody.innerHTML = data.results
+        const sortedResults = [...data.results].sort((a, b) => b.gwPoints - a.gwPoints);
+
+        tbody.innerHTML = sortedResults
           .map(
             (r, i) => `
           <tr class="${i === 0 ? 'rank-1' : ''}">
