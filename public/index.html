@@ -4,55 +4,87 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>FPL League Scoreboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0a0e1a;
-    --card: #161d30;
+    --bg: #070a12;
+    --card: #141b2e;
+    --card-border: rgba(255,255,255,0.06);
     --purple: #37003c;
-    --purple-light: #4a0050;
+    --purple-light: #5c0066;
     --lime: #00ff87;
     --cyan: #04f5ff;
     --pink: #e90052;
     --text: #f0f2f8;
     --muted: #8b92a8;
     --gold: #ffd54a;
-    --silver: #c9d2e0;
+    --silver: #d7dee8;
     --bronze: #e0995a;
   }
   * { box-sizing: border-box; }
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background: var(--bg);
+    background:
+      radial-gradient(ellipse 700px 400px at 20% -10%, rgba(0,255,135,0.08), transparent 60%),
+      radial-gradient(ellipse 600px 400px at 100% 0%, rgba(233,0,82,0.08), transparent 60%),
+      var(--bg);
     color: var(--text);
     margin: 0;
     padding: 0 0 60px;
   }
   .wrap { max-width: 640px; margin: 0 auto; padding: 0 16px; }
+  .sporty { font-family: 'Oswald', -apple-system, sans-serif; }
+  .numeric { font-family: 'Rajdhani', -apple-system, sans-serif; }
 
   .header {
+    position: relative;
+    overflow: hidden;
     background:
-      repeating-linear-gradient(135deg, rgba(255,255,255,0.03) 0 2px, transparent 2px 14px),
-      linear-gradient(135deg, var(--purple) 0%, var(--purple-light) 100%);
-    padding: 28px 16px 22px;
+      repeating-linear-gradient(90deg, rgba(255,255,255,0.025) 0 40px, transparent 40px 80px),
+      linear-gradient(160deg, var(--purple) 0%, var(--purple-light) 55%, #1a0020 100%);
+    padding: 30px 16px 24px;
     border-bottom: 3px solid var(--lime);
+    box-shadow: 0 0 40px rgba(0,255,135,0.12);
     margin-bottom: 20px;
   }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 220px; height: 220px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.07);
+  }
+  .header::after {
+    content: '';
+    position: absolute;
+    bottom: -90px; left: 50%;
+    transform: translateX(-50%);
+    width: 260px; height: 260px;
+    border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.05);
+  }
   .eyebrow {
+    position: relative;
+    z-index: 1;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 7px;
     font-size: 11px;
     font-weight: 700;
-    letter-spacing: 0.12em;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
     color: var(--lime);
-    margin-bottom: 8px;
+    margin-bottom: 10px;
   }
   .eyebrow .dot {
     width: 7px;
     height: 7px;
     border-radius: 50%;
     background: var(--lime);
+    box-shadow: 0 0 8px rgba(0,255,135,0.9);
     animation: pulse 1.4s ease-in-out infinite;
   }
   @keyframes pulse {
@@ -60,24 +92,30 @@
     50% { opacity: 0.5; box-shadow: 0 0 0 5px rgba(0,255,135,0); }
   }
   h1 {
-    font-size: 24px;
-    font-weight: 800;
-    letter-spacing: -0.01em;
+    position: relative;
+    z-index: 1;
+    font-family: 'Oswald', sans-serif;
+    font-size: 28px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.01em;
     margin: 0 0 4px;
     max-width: 480px;
   }
-  .sub { color: rgba(255,255,255,0.65); font-size: 13px; }
+  .sub { position: relative; z-index: 1; color: rgba(255,255,255,0.6); font-size: 13px; }
 
   .banner {
     background: var(--card);
+    border: 1px solid var(--card-border);
     border-left: 4px solid var(--lime);
-    border-radius: 8px;
+    border-radius: 10px;
     padding: 12px 14px;
     font-size: 13px;
     margin-bottom: 20px;
     display: flex;
     align-items: center;
     gap: 10px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.25);
   }
   .live-tag {
     flex-shrink: 0;
@@ -89,7 +127,7 @@
     font-size: 10px;
     font-weight: 800;
     letter-spacing: 0.08em;
-    padding: 3px 8px;
+    padding: 3px 9px;
     border-radius: 999px;
   }
   .live-tag .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--lime); animation: pulse 1.4s ease-in-out infinite; }
@@ -99,48 +137,60 @@
     display: flex;
     gap: 4px;
     background: var(--card);
+    border: 1px solid var(--card-border);
     border-radius: 10px;
     padding: 4px;
     margin-bottom: 16px;
   }
   .tab-btn {
     flex: 1;
-    padding: 11px 12px;
+    padding: 11px 10px;
     border: none;
     background: transparent;
     color: var(--muted);
+    font-family: 'Oswald', sans-serif;
     font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 0.03em;
+    font-weight: 600;
+    letter-spacing: 0.04em;
     text-transform: uppercase;
     border-radius: 8px;
     cursor: pointer;
-    font-family: inherit;
     transition: background 0.15s, color 0.15s;
   }
   .tab-btn.active {
-    background: var(--lime);
+    background: linear-gradient(135deg, var(--lime), #00cf6c);
     color: #04241a;
+    box-shadow: 0 2px 10px rgba(0,255,135,0.35);
   }
   .tab-panel { display: none; }
   .tab-panel.active { display: block; }
 
-  table { width: 100%; border-collapse: collapse; background: var(--card); border-radius: 10px; overflow: hidden; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+  }
   th, td { padding: 12px; text-align: left; font-size: 14px; }
   th {
-    background: var(--purple);
+    background: linear-gradient(90deg, var(--purple), var(--purple-light));
     color: #fff;
-    font-weight: 700;
+    font-family: 'Oswald', sans-serif;
+    font-weight: 600;
     font-size: 11px;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.08em;
     border-bottom: 2px solid var(--lime);
   }
-  tbody tr:not(:last-child) { border-bottom: 1px solid rgba(255,255,255,0.06); }
+  tbody tr:not(:last-child) { border-bottom: 1px solid rgba(255,255,255,0.05); }
+  tbody tr { transition: background 0.15s; }
   tbody tr:hover { background: rgba(255,255,255,0.03); }
-  tbody tr.rank-1 { background: linear-gradient(90deg, rgba(255,213,74,0.10), transparent 60%); }
+  tbody tr.rank-1 { background: linear-gradient(90deg, rgba(255,213,74,0.12), transparent 65%); }
 
-  .rank { width: 44px; text-align: center; font-size: 15px; }
+  .rank { width: 46px; text-align: center; }
   .rank-num {
     display: inline-flex;
     align-items: center;
@@ -148,18 +198,31 @@
     width: 26px;
     height: 26px;
     border-radius: 50%;
-    background: rgba(255,255,255,0.08);
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.08);
     color: var(--muted);
+    font-family: 'Rajdhani', sans-serif;
     font-weight: 700;
     font-size: 13px;
   }
-  .rank-medal { font-size: 20px; }
+  .rank-medal {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    font-size: 17px;
+  }
+  .rank-medal.g { background: radial-gradient(circle at 35% 30%, #fff3c4, var(--gold)); box-shadow: 0 0 10px rgba(255,213,74,0.5); }
+  .rank-medal.s { background: radial-gradient(circle at 35% 30%, #f4f7fb, var(--silver)); box-shadow: 0 0 8px rgba(215,222,232,0.4); }
+  .rank-medal.b { background: radial-gradient(circle at 35% 30%, #f2c39a, var(--bronze)); box-shadow: 0 0 8px rgba(224,153,90,0.4); }
 
-  .team { font-weight: 700; }
+  .team { font-family: 'Oswald', sans-serif; font-weight: 500; font-size: 14.5px; letter-spacing: 0.01em; }
   .manager { color: var(--muted); font-size: 12px; }
-  .points { text-align: right; font-weight: 700; }
-  .gw { text-align: right; color: var(--cyan); font-weight: 700; }
-  .bonus { text-align: right; color: var(--lime); font-weight: 800; font-size: 15px; }
+  .points { text-align: right; font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 16px; }
+  .gw { text-align: right; color: var(--cyan); font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 16px; }
+  .bonus { text-align: right; color: var(--lime); font-family: 'Rajdhani', sans-serif; font-weight: 700; font-size: 18px; }
   .status { color: var(--muted); font-size: 13px; padding: 24px 0; text-align: center; }
   .updated { color: var(--muted); font-size: 11px; margin-top: 10px; text-align: right; letter-spacing: 0.03em; }
   .footnote {
@@ -168,23 +231,26 @@
     margin-top: 28px;
     line-height: 1.7;
     padding-top: 16px;
-    border-top: 1px dashed rgba(255,255,255,0.15);
+    border-top: 1px dashed rgba(255,255,255,0.12);
   }
 
   .feed-card {
     background: var(--card);
-    border-radius: 10px;
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
     padding: 14px;
     margin-bottom: 10px;
     border-left: 4px solid var(--muted);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.25);
   }
   .feed-card.steal { border-left-color: var(--pink); }
   .feed-card.tie { border-left-color: var(--cyan); }
   .feed-card.normal { border-left-color: var(--lime); }
   .feed-gw {
+    font-family: 'Oswald', sans-serif;
     font-size: 11px;
-    font-weight: 800;
-    letter-spacing: 0.06em;
+    font-weight: 600;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--muted);
     margin-bottom: 6px;
@@ -195,7 +261,7 @@
 <body>
   <div class="header">
     <div class="wrap" style="padding:0">
-      <div class="eyebrow"><span class="dot"></span>Live scoreboard</div>
+      <div class="eyebrow"><span class="dot"></span>⚽ Live scoreboard</div>
       <h1 id="league-name">FPL League Scoreboard</h1>
       <div class="sub">-</div>
     </div>
@@ -256,10 +322,11 @@
 
   <script>
     const LEAGUE_ID = '477187';
-    const MEDALS = ['🥇', '🥈', '🥉'];
+    const MEDAL_ICONS = ['🥇', '🥈', '🥉'];
+    const MEDAL_CLASSES = ['g', 's', 'b'];
 
     function rankCell(i) {
-      if (i < 3) return `<span class="rank-medal">${MEDALS[i]}</span>`;
+      if (i < 3) return `<span class="rank-medal ${MEDAL_CLASSES[i]}">${MEDAL_ICONS[i]}</span>`;
       return `<span class="rank-num">${i + 1}</span>`;
     }
 
