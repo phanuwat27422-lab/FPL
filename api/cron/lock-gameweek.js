@@ -2,6 +2,7 @@
 // เรียกโดย GitHub Actions (scheduled) เท่านั้น ไม่ใช่ endpoint สาธารณะ
 // ป้องกันด้วย CRON_SECRET ผ่าน Authorization header
 // รันครั้งเดียวจะไล่ล็อกทุก gameweek ที่จบแล้วแต่ยังไม่เคยล็อก (รองรับ backfill ย้อนหลัง)
+// พร้อมบันทึก "คนนำอยู่ล่าสุด" ของสัปดาห์ที่กำลังเล่นอยู่ไว้เทียบตอนจบ (feature ปาดชนะ)
 
 import { getSupabase } from '../../lib/supabase.js';
 import { getBootstrap, getLeagueStandings, getEntryHistory, getFinishedEvents } from '../../lib/fpl.js';
@@ -21,26 +22,10 @@ export default async function handler(req, res) {
     const bootstrap = await getBootstrap();
     const finishedEvents = getFinishedEvents(bootstrap);
 
-    if (finishedEvents.length === 0) {
-      return res.status(200).json({ message: 'ยังไม่มี gameweek ไหนจบสมบูรณ์เลย' });
-    }
-
-    const { data: processedRows } = await supabase.from('processed_gameweeks').select('gameweek');
-    const processedSet = new Set((processedRows || []).map((r) => r.gameweek));
-    const pending = finishedEvents.filter((e) => !processedSet.has(e.id));
-
-    if (pending.length === 0) {
-      return res.status(200).json({ message: 'ล็อกครบทุก gameweek ที่จบแล้วอยู่แล้ว', skipped: true });
-    }
-
     const standings = await getLeagueStandings(leagueId);
     const entries = standings.standings?.results || [];
 
-    if (entries.length === 0) {
-      return res.status(200).json({ message: 'ไม่พบข้อมูลลีก ข้ามรอบนี้' });
-    }
-
-    // เพิ่มสมาชิกใหม่อัตโนมัติ + sync ชื่อทีมล่าสุด
+    // เพิ่มสมาชิกใหม่อัตโนมัติ + sync ชื่อทีมล่าสุด (ทำทุกรอบที่รัน)
     for (const entry of entries) {
       const { data: existing } = await supabase
         .from('managers')
@@ -53,7 +38,7 @@ export default async function handler(req, res) {
           entry_id: entry.entry,
           team_name: entry.entry_name,
           manager_name: entry.player_name,
-          joined_gameweek: pending[0].id,
+          joined_gameweek: bootstrap.events.find((e) => e.is_current)?.id || 1,
           active: true,
         });
       } else {
@@ -62,6 +47,40 @@ export default async function handler(req, res) {
           .update({ team_name: entry.entry_name, manager_name: entry.player_name })
           .eq('entry_id', entry.entry);
       }
+    }
+
+    // บันทึก snapshot คนนำอยู่ล่าสุดของสัปดาห์ที่กำลังเล่นอยู่ตอนนี้ (ถ้ามี)
+    const currentEvent = bootstrap.events.find((e) => e.is_current);
+    if (currentEvent && entries.length > 0) {
+      const maxPoints = Math.max(...entries.map((e) => e.event_total));
+      if (maxPoints > 0) {
+        const leaderIds = entries.filter((e) => e.event_total === maxPoints).map((e) => e.entry);
+        await supabase.from('gw_leader_snapshots').upsert(
+          {
+            gameweek: currentEvent.id,
+            leader_entry_ids: leaderIds.join(','),
+            leader_points: maxPoints,
+          },
+          { onConflict: 'gameweek' }
+        );
+      }
+    }
+
+    // เช็คว่ามี gameweek ไหนจบสมบูรณ์แล้วแต่ยังไม่เคยล็อกโบนัสบ้าง
+    if (finishedEvents.length === 0) {
+      return res.status(200).json({ message: 'ยังไม่มี gameweek ไหนจบสมบูรณ์เลย (บันทึก snapshot คนนำไว้แล้ว)' });
+    }
+
+    const { data: processedRows } = await supabase.from('processed_gameweeks').select('gameweek');
+    const processedSet = new Set((processedRows || []).map((r) => r.gameweek));
+    const pending = finishedEvents.filter((e) => !processedSet.has(e.id));
+
+    if (pending.length === 0) {
+      return res.status(200).json({ message: 'ล็อกครบทุก gameweek ที่จบแล้วอยู่แล้ว', skipped: true });
+    }
+
+    if (entries.length === 0) {
+      return res.status(200).json({ message: 'ไม่พบข้อมูลลีก ข้ามรอบนี้' });
     }
 
     // ดึงประวัติคะแนนรายสัปดาห์ของทุกทีมครั้งเดียว ใช้ได้ทั้งล็อกปกติและ backfill ย้อนหลัง
