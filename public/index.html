@@ -194,7 +194,7 @@
     <div class="wrap" style="padding:0">
       <div class="eyebrow"><span class="dot"></span>Live scoreboard</div>
       <h1 id="league-name">FPL League Scoreboard</h1>
-      <div class="sub">-</div>
+      <div class="sub" id="sub-text">กำลังโหลด...</div>
     </div>
   </div>
 
@@ -394,9 +394,57 @@
       }
     }
 
+    let deadlineTarget = null;
+    let deadlineGw = null;
+
+    function renderCountdown() {
+      const subEl = document.getElementById('sub-text');
+      if (!deadlineTarget) return;
+
+      const diff = deadlineTarget - Date.now();
+      if (diff <= 0) {
+        subEl.textContent = `ปิดรับเปลี่ยนตัว GW${deadlineGw} แล้ว`;
+        return;
+      }
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+      const mins = Math.floor((diff / (1000 * 60)) % 60);
+
+      let parts = [];
+      if (days > 0) parts.push(`${days} วัน`);
+      parts.push(`${hours} ชม.`);
+      parts.push(`${mins} นาที`);
+
+      subEl.textContent = `ปิดรับเปลี่ยนตัว GW${deadlineGw} ในอีก ${parts.join(' ')}`;
+    }
+
+    async function loadDeadline() {
+      const subEl = document.getElementById('sub-text');
+      try {
+        const res = await fetch('/api/deadline');
+        if (!res.ok) throw new Error('โหลดข้อมูลไม่สำเร็จ');
+        const data = await res.json();
+
+        if (!data.deadline) {
+          subEl.textContent = data.message || 'ไม่มี deadline ถัดไป';
+          return;
+        }
+
+        deadlineTarget = new Date(data.deadline).getTime();
+        deadlineGw = data.gameweek;
+        renderCountdown();
+      } catch (err) {
+        subEl.textContent = '-';
+      }
+    }
+
+    loadDeadline();
     loadStandings();
     loadBonus();
     loadFeed();
+    setInterval(renderCountdown, 60 * 1000);
+    setInterval(loadDeadline, 30 * 60 * 1000);
     setInterval(loadStandings, 5 * 60 * 1000);
     setInterval(loadBonus, 5 * 60 * 1000);
     setInterval(loadFeed, 5 * 60 * 1000);
