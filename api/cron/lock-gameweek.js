@@ -1,9 +1,10 @@
 // api/cron/lock-gameweek.js
 // เรียกโดย GitHub Actions (scheduled) เท่านั้น ไม่ใช่ endpoint สาธารณะ
 // ป้องกันด้วย CRON_SECRET ผ่าน Authorization header
+// รันครั้งเดียวจะไล่ล็อกทุก gameweek ที่จบแล้วแต่ยังไม่เคยล็อก (รองรับ backfill ย้อนหลัง)
 
 import { getSupabase } from '../../lib/supabase.js';
-import { getBootstrap, getLeagueStandings, getLastFinishedEvent } from '../../lib/fpl.js';
+import { getBootstrap, getLeagueStandings, getEntryHistory, getFinishedEvents } from '../../lib/fpl.js';
 
 const BONUS_POOL = 150;
 
@@ -18,31 +19,29 @@ export default async function handler(req, res) {
 
   try {
     const bootstrap = await getBootstrap();
-    const target = getLastFinishedEvent(bootstrap);
+    const finishedEvents = getFinishedEvents(bootstrap);
 
-    if (!target) {
-      return res.status(200).json({ message: 'ยังไม่มี gameweek ไหนจบสมบูรณ์พร้อมล็อก' });
+    if (finishedEvents.length === 0) {
+      return res.status(200).json({ message: 'ยังไม่มี gameweek ไหนจบสมบูรณ์เลย' });
     }
 
-    const { data: already } = await supabase
-      .from('processed_gameweeks')
-      .select('gameweek')
-      .eq('gameweek', target.id)
-      .maybeSingle();
+    const { data: processedRows } = await supabase.from('processed_gameweeks').select('gameweek');
+    const processedSet = new Set((processedRows || []).map((r) => r.gameweek));
+    const pending = finishedEvents.filter((e) => !processedSet.has(e.id));
 
-    if (already) {
-      return res.status(200).json({ message: `GW ${target.id} ถูกล็อกไปแล้ว`, skipped: true });
+    if (pending.length === 0) {
+      return res.status(200).json({ message: 'ล็อกครบทุก gameweek ที่จบแล้วอยู่แล้ว', skipped: true });
     }
 
     const standings = await getLeagueStandings(leagueId);
-    const results = standings.standings?.results || [];
+    const entries = standings.standings?.results || [];
 
-    if (results.length === 0) {
+    if (entries.length === 0) {
       return res.status(200).json({ message: 'ไม่พบข้อมูลลีก ข้ามรอบนี้' });
     }
 
     // เพิ่มสมาชิกใหม่อัตโนมัติ + sync ชื่อทีมล่าสุด
-    for (const entry of results) {
+    for (const entry of entries) {
       const { data: existing } = await supabase
         .from('managers')
         .select('entry_id')
@@ -54,7 +53,7 @@ export default async function handler(req, res) {
           entry_id: entry.entry,
           team_name: entry.entry_name,
           manager_name: entry.player_name,
-          joined_gameweek: target.id,
+          joined_gameweek: pending[0].id,
           active: true,
         });
       } else {
@@ -65,29 +64,48 @@ export default async function handler(req, res) {
       }
     }
 
-    const maxPoints = Math.max(...results.map((e) => e.event_total));
-    const winners = results.filter((e) => e.event_total === maxPoints);
-    const bonusEach = Math.floor(BONUS_POOL / winners.length);
-    const winnerIds = new Set(winners.map((w) => w.entry));
+    // ดึงประวัติคะแนนรายสัปดาห์ของทุกทีมครั้งเดียว ใช้ได้ทั้งล็อกปกติและ backfill ย้อนหลัง
+    const historyByEntry = {};
+    for (const entry of entries) {
+      const history = await getEntryHistory(entry.entry);
+      historyByEntry[entry.entry] = history.current || [];
+    }
 
-    const rows = results.map((entry) => ({
-      gameweek: target.id,
-      entry_id: entry.entry,
-      gw_points: entry.event_total,
-      is_winner: winnerIds.has(entry.entry),
-      bonus_awarded: winnerIds.has(entry.entry) ? bonusEach : 0,
-    }));
+    const summary = [];
 
-    const { error: insertErr } = await supabase.from('weekly_results').insert(rows);
-    if (insertErr) throw insertErr;
+    // ล็อกเรียงจาก gameweek เก่าไปใหม่ ทีละสัปดาห์
+    for (const event of pending) {
+      const rows = entries.map((entry) => {
+        const gwData = historyByEntry[entry.entry].find((h) => h.event === event.id);
+        return { entry: entry.entry, entryName: entry.entry_name, points: gwData ? gwData.points : 0 };
+      });
 
-    const { error: lockErr } = await supabase.from('processed_gameweeks').insert({ gameweek: target.id });
-    if (lockErr) throw lockErr;
+      const maxPoints = Math.max(...rows.map((r) => r.points));
+      const winners = rows.filter((r) => r.points === maxPoints);
+      const bonusEach = Math.floor(BONUS_POOL / winners.length);
+      const winnerIds = new Set(winners.map((w) => w.entry));
 
-    return res.status(200).json({
-      message: `ล็อก GW ${target.id} สำเร็จ`,
-      winners: winners.map((w) => ({ teamName: w.entry_name, points: w.event_total, bonus: bonusEach })),
-    });
+      const dbRows = rows.map((r) => ({
+        gameweek: event.id,
+        entry_id: r.entry,
+        gw_points: r.points,
+        is_winner: winnerIds.has(r.entry),
+        bonus_awarded: winnerIds.has(r.entry) ? bonusEach : 0,
+      }));
+
+      const { error: insertErr } = await supabase.from('weekly_results').insert(dbRows);
+      if (insertErr) throw insertErr;
+
+      const { error: lockErr } = await supabase.from('processed_gameweeks').insert({ gameweek: event.id });
+      if (lockErr) throw lockErr;
+
+      summary.push({
+        gameweek: event.id,
+        winners: winners.map((w) => ({ teamName: w.entryName, points: w.points, bonus: bonusEach })),
+      });
+    }
+
+    return res.status(200).json({ message: `ล็อกสำเร็จ ${summary.length} gameweek`, results: summary });
   } catch (err) {
     return res.status(500).json({ error: 'Lock gameweek failed', detail: err.message });
   }
