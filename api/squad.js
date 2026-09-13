@@ -38,16 +38,18 @@ export default async function handler(req, res) {
     const squad = picksData.picks.map((p) => {
       const el = elementById[p.element];
       const points = el ? el.event_points : 0;
+      const starting = p.position <= 11;
       return {
         name: el ? el.web_name : `#${p.element}`,
         team: el ? teamById[el.team] : '',
         position: el ? POSITIONS[el.element_type] : '',
         isCaptain: p.is_captain,
         isViceCaptain: p.is_vice_captain,
-        starting: p.position <= 11,
+        starting,
         points,
         multiplier: p.multiplier,
-        total: points * p.multiplier,
+        // ตัวสำรองมี multiplier เป็น 0 เสมอ (ไม่นับแต้มจริง) เลยโชว์แต้มดิบแทนคูณ 0
+        total: starting ? points * p.multiplier : points,
       };
     });
 
