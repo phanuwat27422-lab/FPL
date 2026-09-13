@@ -144,6 +144,7 @@
     color: var(--text);
   }
   .player-chip .cap { color: var(--accent); font-weight: 800; margin-left: 4px; }
+  .player-chip .pts { color: var(--muted); font-family: 'Rajdhani', sans-serif; font-weight: 700; margin-left: 4px; }
   .chip-used { color: var(--accent); font-weight: 600; margin-bottom: 6px; font-size: 12.5px; }
 
   .rank { width: 30px; text-align: center; color: var(--muted); font-weight: 600; font-size: 12.5px; }
@@ -282,7 +283,7 @@
         .map(
           (p) => `<span class="player-chip">${p.name}${
             p.isCaptain ? '<span class="cap">C</span>' : p.isViceCaptain ? '<span class="cap">VC</span>' : ''
-          }</span>`
+          } <span class="pts">${p.total}</span></span>`
         )
         .join('');
     }
