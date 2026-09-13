@@ -145,6 +145,21 @@
   }
   .player-chip .cap { color: var(--accent); font-weight: 800; margin-left: 4px; }
   .player-chip .pts { color: var(--muted); font-family: 'Rajdhani', sans-serif; font-weight: 700; margin-left: 4px; }
+  .player-chip .pos {
+    display: inline-block;
+    font-size: 9.5px;
+    font-weight: 700;
+    color: var(--bg);
+    background: var(--muted);
+    border-radius: 3px;
+    padding: 1px 4px;
+    margin-right: 3px;
+    letter-spacing: 0.02em;
+  }
+  .player-chip .pos.GK { background: var(--gold); }
+  .player-chip .pos.DEF { background: #4ea1ff; }
+  .player-chip .pos.MID { background: #22c55e; }
+  .player-chip .pos.FWD { background: var(--accent); }
   .chip-used { color: var(--accent); font-weight: 600; margin-bottom: 6px; font-size: 12.5px; }
 
   .rank { width: 30px; text-align: center; color: var(--muted); font-weight: 600; font-size: 12.5px; }
@@ -281,7 +296,7 @@
     function renderPlayerChips(list) {
       return list
         .map(
-          (p) => `<span class="player-chip">${p.name}${
+          (p) => `<span class="player-chip"><span class="pos ${p.position}">${p.position}</span> ${p.name}${
             p.isCaptain ? '<span class="cap">C</span>' : p.isViceCaptain ? '<span class="cap">VC</span>' : ''
           } <span class="pts">${p.total}</span></span>`
         )
