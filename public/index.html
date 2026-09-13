@@ -306,10 +306,12 @@
           )
           .join('');
 
-        if (data.currentLeaders && data.currentLeaders.length > 0) {
+        if (data.currentLeaders && data.currentLeaders.length > 0 && !data.currentGameweekLocked) {
           const names = data.currentLeaders.map((l) => l.teamName).join(', ');
           leaderTextEl.innerHTML = `กำลังนำอยู่: <b>${names}</b> — ${data.currentLeaders[0].gwPoints} แต้ม (ยังไม่ล็อกแต้มพิเศษ)`;
           bannerEl.style.display = 'flex';
+        } else {
+          bannerEl.style.display = 'none';
         }
 
         statusEl.style.display = 'none';
@@ -445,7 +447,7 @@
     loadFeed();
     setInterval(renderCountdown, 60 * 1000);
     setInterval(loadDeadline, 30 * 60 * 1000);
-    setInterval(loadStandings, 5 * 60 * 1000);
+    setInterval(loadStandings, 2 * 60 * 1000);
     setInterval(loadBonus, 5 * 60 * 1000);
     setInterval(loadFeed, 5 * 60 * 1000);
   </script>
