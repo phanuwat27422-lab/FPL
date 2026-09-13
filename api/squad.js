@@ -37,6 +37,7 @@ export default async function handler(req, res) {
 
     const squad = picksData.picks.map((p) => {
       const el = elementById[p.element];
+      const points = el ? el.event_points : 0;
       return {
         name: el ? el.web_name : `#${p.element}`,
         team: el ? teamById[el.team] : '',
@@ -44,6 +45,9 @@ export default async function handler(req, res) {
         isCaptain: p.is_captain,
         isViceCaptain: p.is_vice_captain,
         starting: p.position <= 11,
+        points,
+        multiplier: p.multiplier,
+        total: points * p.multiplier,
       };
     });
 
