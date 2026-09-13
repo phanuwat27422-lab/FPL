@@ -129,6 +129,22 @@
   tbody tr:not(:last-child) { border-bottom: 1px solid var(--border); }
   tbody tr:hover { background: rgba(255,255,255,0.02); }
   tbody tr.rank-1 td:first-child { box-shadow: inset 3px 0 0 var(--gold); }
+  tbody tr[data-entry] { cursor: pointer; }
+
+  .squad-detail { background: var(--card-2); padding: 10px 12px; font-size: 12.5px; }
+  .squad-section-title { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin: 8px 0 5px; }
+  .squad-section-title:first-child { margin-top: 0; }
+  .squad-players { display: flex; flex-wrap: wrap; gap: 6px; }
+  .player-chip {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 4px 8px;
+    font-size: 12px;
+    color: var(--text);
+  }
+  .player-chip .cap { color: var(--accent); font-weight: 800; margin-left: 4px; }
+  .chip-used { color: var(--accent); font-weight: 600; margin-bottom: 6px; font-size: 12.5px; }
 
   .rank { width: 30px; text-align: center; color: var(--muted); font-weight: 600; font-size: 12.5px; }
   .rank-medal { font-size: 18px; }
@@ -254,11 +270,62 @@
   <script>
     const LEAGUE_ID = '477187';
     const MEDALS = ['🥇', '🥈', '🥉'];
+    let currentGwForSquad = null;
 
     function rankCell(i) {
       if (i < 3) return `<span class="rank-medal">${MEDALS[i]}</span>`;
       return `${i + 1}`;
     }
+
+    function renderPlayerChips(list) {
+      return list
+        .map(
+          (p) => `<span class="player-chip">${p.name}${
+            p.isCaptain ? '<span class="cap">C</span>' : p.isViceCaptain ? '<span class="cap">VC</span>' : ''
+          }</span>`
+        )
+        .join('');
+    }
+
+    document.getElementById('standings-body').addEventListener('click', async (e) => {
+      const row = e.target.closest('tr[data-entry]');
+      if (!row) return;
+      const entryId = row.dataset.entry;
+
+      const existing = row.nextElementSibling;
+      if (existing && existing.classList.contains('squad-row')) {
+        existing.remove();
+        return;
+      }
+      document.querySelectorAll('.squad-row').forEach((el) => el.remove());
+
+      if (!currentGwForSquad) return;
+
+      const detailRow = document.createElement('tr');
+      detailRow.className = 'squad-row';
+      const td = document.createElement('td');
+      td.colSpan = 4;
+      td.className = 'squad-detail';
+      td.textContent = 'กำลังโหลดทีม...';
+      detailRow.appendChild(td);
+      row.after(detailRow);
+
+      try {
+        const res = await fetch(`/api/squad?entry=${entryId}&event=${currentGwForSquad}`);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'โหลดไม่สำเร็จ');
+
+        td.innerHTML = `
+          ${data.activeChip ? `<div class="chip-used">ใช้ชิป: ${data.activeChip}</div>` : ''}
+          <div class="squad-section-title">ตัวจริง</div>
+          <div class="squad-players">${renderPlayerChips(data.starting)}</div>
+          <div class="squad-section-title">ตัวสำรอง</div>
+          <div class="squad-players">${renderPlayerChips(data.bench)}</div>
+        `;
+      } catch (err) {
+        td.textContent = 'โหลดทีมไม่สำเร็จ: ' + err.message;
+      }
+    });
 
     document.querySelectorAll('.tab-btn').forEach((btn) => {
       btn.addEventListener('click', () => {
@@ -290,7 +357,7 @@
         tbody.innerHTML = sortedResults
           .map(
             (r, i) => `
-          <tr class="${i === 0 ? 'rank-1' : ''}">
+          <tr class="${i === 0 ? 'rank-1' : ''}" data-entry="${r.entryId}">
             <td class="rank">${rankCell(i)}</td>
             <td>
               <div class="team-cell">
@@ -312,6 +379,10 @@
           bannerEl.style.display = 'flex';
         } else {
           bannerEl.style.display = 'none';
+        }
+
+        if (data.currentGameweek) {
+          currentGwForSquad = data.currentGameweek;
         }
 
         statusEl.style.display = 'none';
