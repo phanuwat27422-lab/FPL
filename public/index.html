@@ -173,6 +173,17 @@
   .feed-card.normal { border-left-color: #7dffb3; }
   .feed-gw { font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin-bottom: 5px; }
   .feed-msg { font-size: 13px; line-height: 1.55; color: #fff; }
+
+  .hof-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 13px;
+    margin-bottom: 8px;
+  }
+  .hof-icon { font-size: 20px; flex-shrink: 0; }
+  .hof-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 2px; }
+  .hof-value { font-size: 13px; font-weight: 600; color: #fff; }
 </style>
 </head>
 <body>
@@ -189,7 +200,7 @@
       <button class="tab-btn active" data-tab="standings">อันดับ FPL</button>
       <button class="tab-btn" data-tab="bonus">รายได้สะสม</button>
       <button class="tab-btn" data-tab="feed">ไฮไลท์</button>
-      <button class="tab-btn" data-tab="pltable">ตาราง PL</button>
+      <button class="tab-btn" data-tab="hof">Hall of Fame</button>
     </div>
 
     <div id="panel-standings" class="tab-panel active">
@@ -209,10 +220,9 @@
       <div id="feed-list"></div>
     </div>
 
-    <div id="panel-pltable" class="tab-panel">
-      <div id="pltable-status" class="status">กำลังโหลด...</div>
-      <div id="pltable-table" class="card-table glass" style="display:none"></div>
-      <div id="pltable-updated" class="updated"></div>
+    <div id="panel-hof" class="tab-panel">
+      <div id="hof-status" class="status">กำลังโหลด...</div>
+      <div id="hof-list"></div>
     </div>
 
     <div class="footnote"></div>
@@ -226,13 +236,13 @@
     let bonusState = null;
 
     const CELEBRATE_WIN_MESSAGES = [
-      '🎉 {names} คว้ารางวัลไปครองเต็มๆ เก่งมาก!',
+      '🎉 {names} คว้าแต้มพิเศษไปครองเต็มๆ เก่งมาก!',
       '🏆 ขอปรบมือให้ {names} แชมป์ประจำสัปดาห์นี้!',
-      '🔥 {names} ทำได้! เก็บรางวัลไปแบบไม่มีคู่แข่ง',
+      '🔥 {names} ทำได้! เก็บแต้มพิเศษไปแบบไม่มีคู่แข่ง',
     ];
     const CELEBRATE_DRAW_MESSAGES = [
       '🤝 {names} เสมอกันไปคนละครึ่ง ยินดีด้วยทั้งคู่!',
-      '👏 {names} ฟอร์มดีพอกัน แบ่งรางวัลกันไปแบบสันติภาพ',
+      '👏 {names} ฟอร์มดีพอกัน แบ่งแต้มพิเศษกันไปแบบสันติภาพ',
     ];
 
     function pick(list, seed) {
@@ -470,7 +480,7 @@
         renderBanner();
 
         if (data.leaderboard.length === 0) {
-          statusEl.textContent = 'ยังไม่มีสัปดาห์ไหนล็อกรางวัล รอ gameweek แรกจบก่อนนะครับ';
+          statusEl.textContent = 'ยังไม่มีสัปดาห์ไหนล็อกแต้มพิเศษ รอ gameweek แรกจบก่อนนะครับ';
           return;
         }
 
@@ -540,38 +550,34 @@
       }
     }
 
-    async function loadPltable() {
-      const statusEl = document.getElementById('pltable-status');
-      const tableEl = document.getElementById('pltable-table');
+    async function loadHof() {
+      const statusEl = document.getElementById('hof-status');
+      const listEl = document.getElementById('hof-list');
 
       try {
-        const res = await fetch('/api/pltable');
+        const res = await fetch('/api/halloffame');
         if (!res.ok) throw new Error('โหลดข้อมูลไม่สำเร็จ');
         const data = await res.json();
 
-        tableEl.innerHTML = data.table
+        if (data.cards.length === 0) {
+          statusEl.textContent = 'ยังไม่มีสถิติ รอ gameweek แรกจบก่อนนะครับ';
+          return;
+        }
+
+        listEl.innerHTML = data.cards
           .map(
-            (t) => `
-          <div class="row ${t.position === 1 ? 'rank-1' : ''}">
-            <div class="row-left">
-              <span class="rank">${t.position}</span>
-              <div class="team-text">
-                <div class="team">${t.name}</div>
-                <div class="manager">เล่นแล้ว ${t.played} นัด</div>
-              </div>
-            </div>
-            <div class="row-right">
-              <span class="score-chip" style="width:auto;padding:3px 8px">${t.win}W-${t.draw}D-${t.loss}L</span>
-              <span class="score-chip accent">${t.points}</span>
+            (c) => `
+          <div class="hof-card glass">
+            <span class="hof-icon">${c.icon}</span>
+            <div>
+              <div class="hof-label">${c.label}</div>
+              <div class="hof-value">${c.value}</div>
             </div>
           </div>`
           )
           .join('');
 
         statusEl.style.display = 'none';
-        tableEl.style.display = 'block';
-        document.getElementById('pltable-updated').textContent =
-          'อัปเดตล่าสุด: ' + new Date(data.updatedAt).toLocaleString('th-TH');
       } catch (err) {
         statusEl.textContent = 'เกิดข้อผิดพลาด: ' + err.message;
       }
@@ -581,13 +587,13 @@
     loadStandings();
     loadBonus();
     loadFeed();
-    loadPltable();
+    loadHof();
     setInterval(renderCountdown, 60 * 1000);
     setInterval(loadDeadline, 30 * 60 * 1000);
     setInterval(loadStandings, 2 * 60 * 1000);
     setInterval(loadBonus, 2 * 60 * 1000);
     setInterval(loadFeed, 5 * 60 * 1000);
-    setInterval(loadPltable, 30 * 60 * 1000);
+    setInterval(loadHof, 5 * 60 * 1000);
   </script>
 </body>
 </html>
