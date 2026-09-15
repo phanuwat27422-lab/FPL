@@ -226,13 +226,13 @@
     let bonusState = null;
 
     const CELEBRATE_WIN_MESSAGES = [
-      '🎉 {names} คว้าแต้มพิเศษไปครองเต็มๆ เก่งมาก!',
+      '🎉 {names} คว้ารางวัลไปครองเต็มๆ เก่งมาก!',
       '🏆 ขอปรบมือให้ {names} แชมป์ประจำสัปดาห์นี้!',
-      '🔥 {names} ทำได้! เก็บแต้มพิเศษไปแบบไม่มีคู่แข่ง',
+      '🔥 {names} ทำได้! เก็บรางวัลไปแบบไม่มีคู่แข่ง',
     ];
     const CELEBRATE_DRAW_MESSAGES = [
       '🤝 {names} เสมอกันไปคนละครึ่ง ยินดีด้วยทั้งคู่!',
-      '👏 {names} ฟอร์มดีพอกัน แบ่งแต้มพิเศษกันไปแบบสันติภาพ',
+      '👏 {names} ฟอร์มดีพอกัน แบ่งรางวัลกันไปแบบสันติภาพ',
     ];
 
     function pick(list, seed) {
@@ -470,7 +470,7 @@
         renderBanner();
 
         if (data.leaderboard.length === 0) {
-          statusEl.textContent = 'ยังไม่มีสัปดาห์ไหนล็อกแต้มพิเศษ รอ gameweek แรกจบก่อนนะครับ';
+          statusEl.textContent = 'ยังไม่มีสัปดาห์ไหนล็อกรางวัล รอ gameweek แรกจบก่อนนะครับ';
           return;
         }
 
