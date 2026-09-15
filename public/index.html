@@ -385,9 +385,9 @@
                   r.liveBonus > 0
                     ? '<span class="live-badge">LIVE</span>'
                     : r.recentDraw
-                    ? '<span class="draw-badge">DRAW</span>'
+                    ? `<span class="draw-badge">DRAW GW${data.latestLockedGameweek}</span>`
                     : r.recentWin
-                    ? '<span class="win-badge">WIN</span>'
+                    ? `<span class="win-badge">WIN GW${data.latestLockedGameweek}</span>`
                     : ''
                 }</div>
                 <div class="manager">${r.managerName}</div>
