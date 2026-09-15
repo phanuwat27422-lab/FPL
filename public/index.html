@@ -187,6 +187,18 @@
   .gw-cell .score-chip { color: var(--accent); }
   .bonus-cell { text-align: right; }
   .bonus-cell .score-chip { background: rgba(255,90,31,0.15); color: var(--accent); font-size: 15px; }
+  .live-badge {
+    display: inline-block;
+    margin-left: 5px;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    color: var(--live);
+    background: rgba(255,59,48,0.14);
+    padding: 2px 5px;
+    border-radius: 3px;
+    animation: pulse 1.3s ease-in-out infinite;
+  }
 
   .status { color: var(--muted); font-size: 13px; padding: 20px 0; text-align: center; }
   .updated { color: var(--muted); font-size: 10.5px; margin-top: 8px; text-align: right; }
@@ -439,7 +451,10 @@
               </div>
             </td>
             <td>${r.winsCount}</td>
-            <td class="bonus-cell"><span class="score-chip">${r.totalBonus}</span></td>
+            <td class="bonus-cell">
+              <span class="score-chip">${r.displayTotal}</span>
+              ${r.liveBonus > 0 ? '<span class="live-badge">LIVE</span>' : ''}
+            </td>
           </tr>`
           )
           .join('');
