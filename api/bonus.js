@@ -1,12 +1,16 @@
 // api/bonus.js
 // GET /api/bonus
-// ตารางโบนัสสะสม (ล็อกแล้วเท่านั้น) อ่านจาก database ไม่ยุ่งกับ FPL API โดยตรง
+// ตารางโบนัสสะสม: ยอดจริงที่ล็อกแล้ว (permanent) + แต้มคาดการณ์สดของสัปดาห์ที่ยังไม่จบ (liveBonus)
+// liveBonus ไม่เคยถูกบันทึกลง database เป็นแค่ตัวเลขคาดการณ์ให้ดูสนุกระหว่างสัปดาห์เท่านั้น
 
 import { getSupabase } from '../lib/supabase.js';
+import { getBootstrap, getLeagueStandings } from '../lib/fpl.js';
 
-const BONUS_POOL = 150; // เต็ม 1 ชนะ = ได้ครบ 150; เสมอ 2 คนได้คนละ 75 = นับเป็น 0.5 ชนะ
+const BONUS_POOL = 150;
 
 export default async function handler(req, res) {
+  const leagueId = process.env.FPL_LEAGUE_ID || '477187';
+
   try {
     const supabase = getSupabase();
 
@@ -28,6 +32,7 @@ export default async function handler(req, res) {
         teamName: m.team_name,
         managerName: m.manager_name,
         totalBonus: 0,
+        liveBonus: 0,
         winsCount: 0,
         wins: [],
       };
@@ -43,14 +48,53 @@ export default async function handler(req, res) {
       }
     }
 
-    for (const bucket of Object.values(byEntry)) {
-      bucket.winsCount = Math.round(bucket.winsCount * 100) / 100;
+    // เพิ่มแต้มคาดการณ์สดของ gameweek ปัจจุบัน (ถ้ายังไม่ถูกล็อกจริง)
+    let currentGameweekLocked = true;
+    try {
+      const [bootstrap, standings] = await Promise.all([getBootstrap(), getLeagueStandings(leagueId)]);
+      const currentEvent = bootstrap.events.find((e) => e.is_current);
+
+      if (currentEvent) {
+        const { data: locked } = await supabase
+          .from('processed_gameweeks')
+          .select('gameweek')
+          .eq('gameweek', currentEvent.id)
+          .maybeSingle();
+        currentGameweekLocked = !!locked;
+
+        if (!currentGameweekLocked) {
+          const entries = standings.standings?.results || [];
+          const maxPoints = entries.length ? Math.max(...entries.map((e) => e.event_total)) : 0;
+
+          if (maxPoints > 0) {
+            const liveWinners = entries.filter((e) => e.event_total === maxPoints);
+            const liveBonusEach = Math.floor(BONUS_POOL / liveWinners.length);
+
+            for (const w of liveWinners) {
+              if (byEntry[w.entry]) {
+                byEntry[w.entry].liveBonus = liveBonusEach;
+              }
+            }
+          }
+        }
+      }
+    } catch (liveErr) {
+      // ถ้าดึงคะแนนสดไม่ได้ ให้ตกลงเหลือแค่ยอดที่ล็อกแล้วจริง ไม่ทำให้ endpoint พังทั้งตัว
     }
 
-    const leaderboard = Object.values(byEntry).sort((a, b) => b.totalBonus - a.totalBonus);
+    for (const bucket of Object.values(byEntry)) {
+      bucket.winsCount = Math.round(bucket.winsCount * 100) / 100;
+      bucket.displayTotal = bucket.totalBonus + bucket.liveBonus;
+    }
 
-    res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=900');
-    return res.status(200).json({ updatedAt: new Date().toISOString(), leaderboard });
+    const leaderboard = Object.values(byEntry).sort((a, b) => b.displayTotal - a.displayTotal);
+
+    res.setHeader('Cache-Control', 's-maxage=120, stale-while-revalidate=300');
+    return res.status(200).json({
+      updatedAt: new Date().toISOString(),
+      currentGameweekLocked,
+      leaderboard,
+    });
   } catch (err) {
     return res.status(500).json({ error: 'Failed to load bonus table', detail: err.message });
   }
