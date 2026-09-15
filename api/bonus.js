@@ -87,6 +87,15 @@ export default async function handler(req, res) {
       bucket.displayTotal = bucket.totalBonus + bucket.liveBonus;
     }
 
+    // ทีมที่ชนะ gameweek ล่าสุดที่ล็อกไปแล้ว (ไม่ใช่ live) ให้ติดป้าย WIN
+    const lockedGameweeks = weekly.map((w) => w.gameweek);
+    const latestLockedGameweek = lockedGameweeks.length ? Math.max(...lockedGameweeks) : null;
+
+    for (const bucket of Object.values(byEntry)) {
+      bucket.recentWin =
+        latestLockedGameweek !== null && bucket.wins.some((w) => w.gameweek === latestLockedGameweek);
+    }
+
     const leaderboard = Object.values(byEntry).sort((a, b) => b.displayTotal - a.displayTotal);
 
     res.setHeader('Cache-Control', 's-maxage=120, stale-while-revalidate=300');
