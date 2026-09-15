@@ -13,3 +13,4 @@ jobs:
         run: |
           curl -sf -X GET "${{ secrets.DEPLOYMENT_URL }}/api/cron/lock-gameweek" \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
+# trigger reindex
