@@ -1,0 +1,15 @@
+name: Lock FPL gameweek bonus
+
+on:
+  schedule:
+    - cron: '0 */3 * * *'
+  workflow_dispatch: {}
+
+jobs:
+  lock:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call lock endpoint
+        run: |
+          curl -sf -X GET "${{ secrets.DEPLOYMENT_URL }}/api/cron/lock-gameweek" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"
