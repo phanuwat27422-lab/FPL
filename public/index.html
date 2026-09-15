@@ -58,6 +58,16 @@
   }
   .banner b { color: #fff; }
   .banner .val { font-size: 15px; font-weight: 800; color: var(--accent); font-family: 'Rajdhani', sans-serif; }
+  .banner.pending { border: none; }
+  .banner .pending-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); flex-shrink: 0; }
+  .banner .confirmed-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+  .banner .pending-text { display: flex; flex-direction: column; gap: 2px; }
+  .banner .pending-title { font-size: 12.5px; font-weight: 600; color: var(--gold); }
+  .banner .confirmed-title { font-size: 12.5px; font-weight: 600; color: var(--accent); }
+  .banner .pending-sub { font-size: 11px; color: var(--muted); }
+  .banner.celebrate { background: rgba(255,213,74,0.1); }
+  .banner .celebrate-icon { font-size: 18px; flex-shrink: 0; }
+  .banner .celebrate-title { font-size: 12.5px; font-weight: 700; color: var(--gold); }
 
   .tabs { padding: 4px; display: flex; gap: 3px; margin-bottom: 12px; }
   .tab-btn {
@@ -173,10 +183,7 @@
       <div class="sub" id="sub-text">กำลังโหลด...</div>
     </div>
 
-    <div id="leader-banner" class="banner glass" style="display:none">
-      <span id="leader-text"></span>
-      <span id="leader-value" class="val"></span>
-    </div>
+    <div id="leader-banner" class="banner glass" style="display:none"></div>
 
     <div class="tabs glass">
       <button class="tab-btn active" data-tab="standings">อันดับ FPL</button>
@@ -208,6 +215,88 @@
     const LEAGUE_ID = '477187';
     const MEDALS = ['🥇', '🥈', '🥉'];
     let currentGwForSquad = null;
+    let standingsState = null;
+    let bonusState = null;
+
+    const CELEBRATE_WIN_MESSAGES = [
+      '🎉 {names} คว้าแต้มพิเศษไปครองเต็มๆ เก่งมาก!',
+      '🏆 ขอปรบมือให้ {names} แชมป์ประจำสัปดาห์นี้!',
+      '🔥 {names} ทำได้! เก็บแต้มพิเศษไปแบบไม่มีคู่แข่ง',
+    ];
+    const CELEBRATE_DRAW_MESSAGES = [
+      '🤝 {names} เสมอกันไปคนละครึ่ง ยินดีด้วยทั้งคู่!',
+      '👏 {names} ฟอร์มดีพอกัน แบ่งแต้มพิเศษกันไปแบบสันติภาพ',
+    ];
+
+    function pick(list, seed) {
+      return list[((seed % list.length) + list.length) % list.length];
+    }
+
+    function renderBanner() {
+      const bannerEl = document.getElementById('leader-banner');
+      if (!standingsState) return;
+
+      bannerEl.className = 'banner glass';
+
+      if (standingsState.currentGameweekLocked) {
+        if (bonusState && bonusState.recentWinnerNames && bonusState.recentWinnerNames.length > 0) {
+          const names = bonusState.recentWinnerNames.join(' และ ');
+          const template = bonusState.recentWasDraw
+            ? pick(CELEBRATE_DRAW_MESSAGES, bonusState.latestLockedGameweek)
+            : pick(CELEBRATE_WIN_MESSAGES, bonusState.latestLockedGameweek);
+          const message = template.replace('{names}', names);
+          bannerEl.classList.add('celebrate');
+          bannerEl.innerHTML = `
+            <span class="celebrate-icon">🏆</span>
+            <div class="pending-text">
+              <span class="celebrate-title">GW${bonusState.latestLockedGameweek} จบแล้ว!</span>
+              <span class="pending-sub">${message}</span>
+            </div>
+          `;
+          bannerEl.style.display = 'flex';
+        } else {
+          bannerEl.style.display = 'none';
+        }
+        return;
+      }
+
+      if (standingsState.gwFinished && !standingsState.gwDataChecked) {
+        const leaderNote =
+          standingsState.currentLeaders && standingsState.currentLeaders.length > 0
+            ? `ตอนนี้ ${standingsState.currentLeaders.map((l) => l.teamName).join(', ')} นำอยู่ ${standingsState.currentLeaders[0].gwPoints} แต้ม`
+            : 'กำลังรวบรวมผลคะแนน';
+        bannerEl.innerHTML = `
+          <span class="pending-dot"></span>
+          <div class="pending-text">
+            <span class="pending-title">FPL ยังไม่ล็อกผลการแข่งขัน</span>
+            <span class="pending-sub">${leaderNote} · รอยืนยันแต้มโบนัส</span>
+          </div>
+        `;
+        bannerEl.style.display = 'flex';
+      } else if (standingsState.gwFinished && standingsState.gwDataChecked) {
+        const leaderNote =
+          standingsState.currentLeaders && standingsState.currentLeaders.length > 0
+            ? `ผู้นำตอนนี้: ${standingsState.currentLeaders.map((l) => l.teamName).join(', ')} — ${standingsState.currentLeaders[0].gwPoints} แต้ม`
+            : 'กำลังสรุปผล';
+        bannerEl.innerHTML = `
+          <span class="confirmed-dot"></span>
+          <div class="pending-text">
+            <span class="confirmed-title">FPL ยืนยันผลแล้ว รอระบบล็อกอัตโนมัติ</span>
+            <span class="pending-sub">${leaderNote} · ล็อกภายใน 15 นาที</span>
+          </div>
+        `;
+        bannerEl.style.display = 'flex';
+      } else if (standingsState.currentLeaders && standingsState.currentLeaders.length > 0) {
+        const names = standingsState.currentLeaders.map((l) => l.teamName).join(', ');
+        bannerEl.innerHTML = `
+          <span>กำลังนำอยู่: <b>${names}</b></span>
+          <span class="val">${standingsState.currentLeaders[0].gwPoints}</span>
+        `;
+        bannerEl.style.display = 'flex';
+      } else {
+        bannerEl.style.display = 'none';
+      }
+    }
 
     function rankCell(i) {
       if (i < 3) return `<span class="rank-medal">${MEDALS[i]}</span>`;
@@ -306,8 +395,6 @@
     async function loadStandings() {
       const statusEl = document.getElementById('standings-status');
       const tableEl = document.getElementById('standings-table');
-      const bannerEl = document.getElementById('leader-banner');
-      const leaderTextEl = document.getElementById('leader-text');
 
       try {
         const res = await fetch(`/api/standings?league=${LEAGUE_ID}`);
@@ -342,14 +429,13 @@
           row.addEventListener('click', () => toggleSquad(row, row.dataset.entry));
         });
 
-        if (data.currentLeaders && data.currentLeaders.length > 0 && !data.currentGameweekLocked) {
-          const names = data.currentLeaders.map((l) => l.teamName).join(', ');
-          leaderTextEl.innerHTML = `กำลังนำอยู่: <b>${names}</b>`;
-          document.getElementById('leader-value').textContent = data.currentLeaders[0].gwPoints;
-          bannerEl.style.display = 'flex';
-        } else {
-          bannerEl.style.display = 'none';
-        }
+        standingsState = {
+          currentGameweekLocked: data.currentGameweekLocked,
+          gwFinished: data.gwFinished,
+          gwDataChecked: data.gwDataChecked,
+          currentLeaders: data.currentLeaders,
+        };
+        renderBanner();
 
         statusEl.style.display = 'none';
         tableEl.style.display = 'block';
@@ -368,6 +454,13 @@
         const res = await fetch('/api/bonus');
         if (!res.ok) throw new Error('โหลดข้อมูลไม่สำเร็จ');
         const data = await res.json();
+
+        bonusState = {
+          latestLockedGameweek: data.latestLockedGameweek,
+          recentWinnerNames: data.recentWinnerNames,
+          recentWasDraw: data.recentWasDraw,
+        };
+        renderBanner();
 
         if (data.leaderboard.length === 0) {
           statusEl.textContent = 'ยังไม่มีสัปดาห์ไหนล็อกแต้มพิเศษ รอ gameweek แรกจบก่อนนะครับ';
