@@ -9,271 +9,175 @@
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0d1117;
-    --card: #161b22;
-    --card-2: #1c222c;
-    --border: #262c36;
-    --accent: #ff5a1f;
-    --live: #ff3b30;
-    --text: #e6edf3;
-    --muted: #8b949e;
-    --gold: #ffc93c;
-    --silver: #c9d1d9;
-    --bronze: #d38b5d;
+    --accent: #5fe0ff;
+    --live: #ff6a6a;
+    --gold: #ffd54a;
+    --glass-bg: rgba(255,255,255,0.06);
+    --glass-bg-soft: rgba(255,255,255,0.045);
+    --glass-border: rgba(255,255,255,0.14);
+    --text: #ffffff;
+    --muted: rgba(255,255,255,0.5);
+    --muted-strong: rgba(255,255,255,0.65);
   }
   * { box-sizing: border-box; }
+  html, body { height: 100%; }
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background: var(--bg);
+    background: linear-gradient(160deg, #0f1b2e 0%, #122a24 100%);
+    background-attachment: fixed;
     color: var(--text);
     margin: 0;
-    padding: 0 0 60px;
-    font-feature-settings: "tnum";
+    padding: 20px 14px 60px;
   }
-  .wrap { max-width: 640px; margin: 0 auto; padding: 0 16px; }
+  .wrap { max-width: 460px; margin: 0 auto; }
   .numeric { font-family: 'Rajdhani', sans-serif; font-variant-numeric: tabular-nums; }
 
-  .header {
-    background: var(--card);
-    border-bottom: 1px solid var(--border);
-    padding: 16px 16px;
-    margin-bottom: 16px;
+  .glass {
+    background: var(--glass-bg);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
   }
-  .eyebrow {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: var(--live);
-    margin-bottom: 6px;
-  }
-  .eyebrow .dot {
-    width: 6px; height: 6px; border-radius: 50%;
-    background: var(--live);
-    animation: pulse 1.3s ease-in-out infinite;
-  }
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.35; }
-  }
-  h1 {
-    font-size: 19px;
-    font-weight: 700;
-    margin: 0 0 2px;
-    color: #fff;
-  }
-  .sub { color: var(--muted); font-size: 12.5px; }
+
+  .header { padding: 14px 16px; margin-bottom: 12px; }
+  .eyebrow { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+  .eyebrow .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: pulse 1.4s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+  .eyebrow span.label { font-size: 10px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; }
+  h1 { font-size: 18px; font-weight: 700; margin: 0; color: #fff; }
+  .sub { color: var(--muted); font-size: 12px; margin-top: 3px; }
 
   .banner {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--live);
-    border-radius: 6px;
-    padding: 10px 12px;
-    font-size: 13px;
-    margin-bottom: 16px;
+    padding: 10px 14px;
+    margin-bottom: 12px;
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 9px;
+    font-size: 12.5px;
   }
-  .live-tag {
-    flex-shrink: 0;
-    display: inline-flex; align-items: center; gap: 5px;
-    background: rgba(255,59,48,0.14);
-    color: var(--live);
-    font-size: 10px; font-weight: 800; letter-spacing: 0.06em;
-    padding: 2px 8px; border-radius: 3px;
-  }
-  .live-tag .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--live); animation: pulse 1.3s ease-in-out infinite; }
   .banner b { color: #fff; }
+  .banner .val { font-size: 15px; font-weight: 800; color: var(--accent); font-family: 'Rajdhani', sans-serif; }
 
-  .tabs {
-    display: flex;
-    border-bottom: 1px solid var(--border);
-    margin-bottom: 14px;
-  }
+  .tabs { padding: 4px; display: flex; gap: 3px; margin-bottom: 12px; }
   .tab-btn {
     flex: 1;
-    padding: 10px 6px;
+    padding: 9px 6px;
     border: none;
-    border-bottom: 2px solid transparent;
+    border-radius: 12px;
     background: transparent;
     color: var(--muted);
-    font-size: 12.5px;
+    font-size: 11.5px;
     font-weight: 600;
     cursor: pointer;
-    transition: color 0.15s, border-color 0.15s;
-    margin-bottom: -1px;
+    transition: background 0.15s, color 0.15s;
   }
-  .tab-btn.active {
-    color: #fff;
-    border-bottom-color: var(--accent);
-  }
+  .tab-btn.active { background: rgba(255,255,255,0.14); color: #fff; }
   .tab-panel { display: none; }
   .tab-panel.active { display: block; }
 
-  table { width: 100%; border-collapse: collapse; background: var(--card); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
-  th, td { padding: 9px 10px; text-align: left; font-size: 13.5px; }
-  th {
-    background: var(--card-2);
-    color: var(--muted);
-    font-weight: 600;
-    font-size: 10.5px;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    border-bottom: 1px solid var(--border);
+  .card-table { overflow: hidden; }
+  .row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 11px 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
   }
-  tbody tr:not(:last-child) { border-bottom: 1px solid var(--border); }
-  tbody tr:hover { background: rgba(255,255,255,0.02); }
-  tbody tr.rank-1 td:first-child { box-shadow: inset 3px 0 0 var(--gold); }
-  tbody tr[data-entry] { cursor: pointer; }
+  .row:last-child { border-bottom: none; }
+  .row.rank-1 { background: rgba(255,213,74,0.08); }
 
-  .squad-detail { background: var(--card-2); padding: 10px 12px; font-size: 12.5px; }
-  .squad-section-title { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin: 8px 0 5px; }
-  .squad-section-title:first-child { margin-top: 0; }
-  .squad-players { display: flex; flex-wrap: wrap; gap: 6px; }
-  .player-chip {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 5px;
-    padding: 4px 8px;
-    font-size: 12px;
-    color: var(--text);
+  .row-left { display: flex; align-items: center; gap: 9px; min-width: 0; }
+  .rank { width: 24px; text-align: center; font-size: 12px; color: var(--muted); flex-shrink: 0; }
+  .rank-medal { font-size: 16px; }
+  .team-text { min-width: 0; }
+  .team { font-weight: 600; font-size: 13.5px; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .manager { color: var(--muted); font-size: 10.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  .row-right { display: flex; gap: 6px; flex-shrink: 0; }
+  .score-chip {
+    display: inline-block;
+    min-width: 28px;
+    text-align: center;
+    padding: 3px 7px;
+    border-radius: 7px;
+    background: rgba(255,255,255,0.09);
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    color: #fff;
   }
-  .player-chip .cap { color: var(--accent); font-weight: 800; margin-left: 4px; }
-  .player-chip .pts { color: var(--muted); font-family: 'Rajdhani', sans-serif; font-weight: 700; margin-left: 4px; }
+  .score-chip.accent { background: rgba(95,224,255,0.14); color: var(--accent); }
+
+  .live-badge, .win-badge, .draw-badge {
+    display: inline-block;
+    margin-left: 5px;
+    font-size: 8.5px;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    padding: 1px 5px;
+    border-radius: 5px;
+    vertical-align: middle;
+  }
+  .live-badge { color: var(--live); background: rgba(255,106,106,0.15); animation: pulse 1.4s ease-in-out infinite; }
+  .win-badge { color: #7dffb3; background: rgba(125,255,179,0.15); }
+  .draw-badge { color: var(--accent); background: rgba(95,224,255,0.15); }
+
+  .status { color: var(--muted); font-size: 12.5px; padding: 22px 0; text-align: center; }
+  .updated { color: var(--muted); font-size: 10.5px; margin-top: 8px; text-align: right; padding: 0 2px; }
+  .footnote { color: var(--muted); font-size: 11.5px; margin-top: 22px; line-height: 1.6; padding: 12px 14px; }
+
+  .squad-row-wrap { padding: 10px 12px 12px; border-bottom: 1px solid rgba(255,255,255,0.07); }
+  .squad-section-title { font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin: 6px 0 5px; }
+  .squad-section-title:first-child { margin-top: 0; }
+  .squad-players { display: flex; flex-wrap: wrap; gap: 5px; }
+  .player-chip {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 6px;
+    padding: 3px 7px;
+    font-size: 11px;
+    color: #fff;
+  }
+  .player-chip .cap { color: var(--accent); font-weight: 800; margin-left: 3px; }
+  .player-chip .pts { color: var(--muted); font-family: 'Rajdhani', sans-serif; font-weight: 700; margin-left: 3px; }
   .player-chip .pos {
     display: inline-block;
-    font-size: 9.5px;
+    font-size: 8.5px;
     font-weight: 700;
-    color: var(--bg);
-    background: var(--muted);
+    color: #0d1117;
     border-radius: 3px;
     padding: 1px 4px;
     margin-right: 3px;
-    letter-spacing: 0.02em;
   }
   .player-chip .pos.GK { background: var(--gold); }
-  .player-chip .pos.DEF { background: #4ea1ff; }
-  .player-chip .pos.MID { background: #22c55e; }
-  .player-chip .pos.FWD { background: var(--accent); }
-  .chip-used { color: var(--accent); font-weight: 600; margin-bottom: 6px; font-size: 12.5px; }
+  .player-chip .pos.DEF { background: #7dc4ff; }
+  .player-chip .pos.MID { background: #7dffb3; }
+  .player-chip .pos.FWD { background: var(--live); }
+  .chip-used { color: var(--accent); font-weight: 600; margin-bottom: 6px; font-size: 11.5px; }
+  .row[data-entry] { cursor: pointer; }
 
-  .rank { width: 30px; text-align: center; color: var(--muted); font-weight: 600; font-size: 12.5px; }
-  .rank-medal { font-size: 18px; }
-
-  .team-cell { display: flex; align-items: center; }
-  .team-text { display: flex; flex-direction: column; line-height: 1.25; }
-  .team { font-weight: 600; font-size: 13.5px; color: #fff; }
-  .manager { color: var(--muted); font-size: 11px; }
-
-  .score-chip {
-    display: inline-block;
-    min-width: 30px;
-    text-align: center;
-    padding: 3px 8px;
-    border-radius: 5px;
-    background: var(--card-2);
-    font-family: 'Rajdhani', sans-serif;
-    font-weight: 700;
-    font-size: 14px;
-    color: #fff;
-  }
-  .points-cell { text-align: right; }
-  .gw-cell { text-align: right; }
-  .gw-cell .score-chip { color: var(--accent); }
-  .bonus-cell { text-align: right; }
-  .bonus-cell .score-chip { background: rgba(255,90,31,0.15); color: var(--accent); font-size: 15px; }
-  .live-badge {
-    display: inline-block;
-    margin-left: 6px;
-    font-size: 9px;
-    font-weight: 800;
-    letter-spacing: 0.05em;
-    color: var(--live);
-    background: rgba(255,59,48,0.14);
-    padding: 2px 5px;
-    border-radius: 3px;
-    vertical-align: middle;
-    animation: pulse 1.3s ease-in-out infinite;
-  }
-  .win-badge {
-    display: inline-block;
-    margin-left: 6px;
-    font-size: 9px;
-    font-weight: 800;
-    letter-spacing: 0.05em;
-    color: #04241a;
-    background: var(--lime, #22c55e);
-    padding: 2px 5px;
-    border-radius: 3px;
-    vertical-align: middle;
-  }
-  .draw-badge {
-    display: inline-block;
-    margin-left: 6px;
-    font-size: 9px;
-    font-weight: 800;
-    letter-spacing: 0.05em;
-    color: #04203a;
-    background: #4ea1ff;
-    padding: 2px 5px;
-    border-radius: 3px;
-    vertical-align: middle;
-  }
-
-  .status { color: var(--muted); font-size: 13px; padding: 20px 0; text-align: center; }
-  .updated { color: var(--muted); font-size: 10.5px; margin-top: 8px; text-align: right; }
-  .footnote {
-    color: var(--muted);
-    font-size: 12px;
-    margin-top: 24px;
-    line-height: 1.6;
-    padding-top: 14px;
-    border-top: 1px solid var(--border);
-  }
-
-  .feed-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 12px 13px;
-    margin-bottom: 8px;
-    border-left: 3px solid var(--muted);
-  }
+  .feed-card { padding: 12px 13px; margin-bottom: 8px; border-left: 3px solid var(--muted); border-radius: 0 16px 16px 0; }
   .feed-card.steal { border-left-color: var(--live); }
-  .feed-card.tie { border-left-color: #4ea1ff; }
-  .feed-card.normal { border-left-color: var(--accent); }
-  .feed-gw {
-    font-size: 10.5px;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 5px;
-  }
-  .feed-msg { font-size: 13.5px; line-height: 1.55; }
+  .feed-card.tie { border-left-color: var(--accent); }
+  .feed-card.normal { border-left-color: #7dffb3; }
+  .feed-gw { font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); margin-bottom: 5px; }
+  .feed-msg { font-size: 13px; line-height: 1.55; color: #fff; }
 </style>
 </head>
 <body>
-  <div class="header">
-    <div class="wrap" style="padding:0">
-      <div class="eyebrow"><span class="dot"></span>Live scoreboard</div>
+  <div class="wrap">
+    <div class="header glass">
+      <div class="eyebrow"><span class="dot"></span><span class="label">Live scoreboard</span></div>
       <h1 id="league-name">FPL League Scoreboard</h1>
       <div class="sub" id="sub-text">กำลังโหลด...</div>
     </div>
-  </div>
 
-  <div class="wrap">
-    <div id="leader-banner" class="banner" style="display:none">
-      <span class="live-tag"><span class="dot"></span>Live</span>
+    <div id="leader-banner" class="banner glass" style="display:none">
       <span id="leader-text"></span>
     </div>
 
-    <div class="tabs">
+    <div class="tabs glass">
       <button class="tab-btn active" data-tab="standings">อันดับ FPL</button>
       <button class="tab-btn" data-tab="bonus">รายได้สะสม</button>
       <button class="tab-btn" data-tab="feed">ไฮไลท์</button>
@@ -281,33 +185,13 @@
 
     <div id="panel-standings" class="tab-panel active">
       <div id="standings-status" class="status">กำลังโหลด...</div>
-      <table id="standings-table" style="display:none">
-        <thead>
-          <tr>
-            <th class="rank">#</th>
-            <th>ทีม</th>
-            <th class="gw-cell">GW</th>
-            <th class="points-cell">รวม</th>
-          </tr>
-        </thead>
-        <tbody id="standings-body"></tbody>
-      </table>
+      <div id="standings-table" class="card-table glass" style="display:none"></div>
       <div id="standings-updated" class="updated"></div>
     </div>
 
     <div id="panel-bonus" class="tab-panel">
       <div id="bonus-status" class="status">กำลังโหลด...</div>
-      <table id="bonus-table" style="display:none">
-        <thead>
-          <tr>
-            <th class="rank">#</th>
-            <th>ทีม</th>
-            <th>ชนะ</th>
-            <th class="bonus-cell">รายได้สะสม</th>
-          </tr>
-        </thead>
-        <tbody id="bonus-body"></tbody>
-      </table>
+      <div id="bonus-table" class="card-table glass" style="display:none"></div>
       <div id="bonus-updated" class="updated"></div>
     </div>
 
@@ -316,8 +200,7 @@
       <div id="feed-list"></div>
     </div>
 
-    <div class="footnote">
-    </div>
+    <div class="footnote"></div>
   </div>
 
   <script>
@@ -330,6 +213,15 @@
       return `${i + 1}`;
     }
 
+    document.querySelectorAll('.tab-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach((b) => b.classList.remove('active'));
+        document.querySelectorAll('.tab-panel').forEach((p) => p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+      });
+    });
+
     function renderPlayerChips(list) {
       return list
         .map(
@@ -340,27 +232,18 @@
         .join('');
     }
 
-    document.getElementById('standings-body').addEventListener('click', async (e) => {
-      const row = e.target.closest('tr[data-entry]');
-      if (!row) return;
-      const entryId = row.dataset.entry;
-
+    async function toggleSquad(row, entryId) {
       const existing = row.nextElementSibling;
       if (existing && existing.classList.contains('squad-row')) {
         existing.remove();
         return;
       }
       document.querySelectorAll('.squad-row').forEach((el) => el.remove());
-
       if (!currentGwForSquad) return;
 
-      const detailRow = document.createElement('tr');
-      detailRow.className = 'squad-row';
-      const td = document.createElement('td');
-      td.colSpan = 4;
-      td.className = 'squad-detail';
-      td.textContent = 'กำลังโหลดทีม...';
-      detailRow.appendChild(td);
+      const detailRow = document.createElement('div');
+      detailRow.className = 'squad-row squad-row-wrap';
+      detailRow.textContent = 'กำลังโหลดทีม...';
       row.after(detailRow);
 
       try {
@@ -368,7 +251,7 @@
         const data = await res.json();
         if (!res.ok) throw new Error(data.error || 'โหลดไม่สำเร็จ');
 
-        td.innerHTML = `
+        detailRow.innerHTML = `
           ${data.activeChip ? `<div class="chip-used">ใช้ชิป: ${data.activeChip}</div>` : ''}
           <div class="squad-section-title">ตัวจริง</div>
           <div class="squad-players">${renderPlayerChips(data.starting)}</div>
@@ -376,23 +259,52 @@
           <div class="squad-players">${renderPlayerChips(data.bench)}</div>
         `;
       } catch (err) {
-        td.textContent = 'โหลดทีมไม่สำเร็จ: ' + err.message;
+        detailRow.textContent = 'โหลดทีมไม่สำเร็จ: ' + err.message;
       }
-    });
+    }
 
-    document.querySelectorAll('.tab-btn').forEach((btn) => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.tab-btn').forEach((b) => b.classList.remove('active'));
-        document.querySelectorAll('.tab-panel').forEach((p) => p.classList.remove('active'));
-        btn.classList.add('active');
-        document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
-      });
-    });
+    let deadlineTarget = null;
+    let deadlineGw = null;
+
+    function renderCountdown() {
+      const subEl = document.getElementById('sub-text');
+      if (!deadlineTarget) return;
+      const diff = deadlineTarget - Date.now();
+      if (diff <= 0) {
+        subEl.textContent = `ปิดรับเปลี่ยนตัว GW${deadlineGw} แล้ว`;
+        return;
+      }
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+      const mins = Math.floor((diff / (1000 * 60)) % 60);
+      let parts = [];
+      if (days > 0) parts.push(`${days} วัน`);
+      parts.push(`${hours} ชม.`);
+      parts.push(`${mins} นาที`);
+      subEl.textContent = `ปิดรับเปลี่ยนตัว GW${deadlineGw} ในอีก ${parts.join(' ')}`;
+    }
+
+    async function loadDeadline() {
+      const subEl = document.getElementById('sub-text');
+      try {
+        const res = await fetch('/api/deadline');
+        if (!res.ok) throw new Error('โหลดข้อมูลไม่สำเร็จ');
+        const data = await res.json();
+        if (!data.deadline) {
+          subEl.textContent = data.message || 'ไม่มี deadline ถัดไป';
+          return;
+        }
+        deadlineTarget = new Date(data.deadline).getTime();
+        deadlineGw = data.gameweek;
+        renderCountdown();
+      } catch (err) {
+        subEl.textContent = '-';
+      }
+    }
 
     async function loadStandings() {
       const statusEl = document.getElementById('standings-status');
       const tableEl = document.getElementById('standings-table');
-      const tbody = document.getElementById('standings-body');
       const bannerEl = document.getElementById('leader-banner');
       const leaderTextEl = document.getElementById('leader-text');
 
@@ -401,45 +313,48 @@
         if (!res.ok) throw new Error('โหลดข้อมูลไม่สำเร็จ');
         const data = await res.json();
 
-        if (data.leagueName) {
-          document.getElementById('league-name').textContent = data.leagueName;
-        }
+        if (data.leagueName) document.getElementById('league-name').textContent = data.leagueName;
+        if (data.currentGameweek) currentGwForSquad = data.currentGameweek;
 
         const sortedResults = [...data.results].sort((a, b) => b.gwPoints - a.gwPoints);
 
-        tbody.innerHTML = sortedResults
+        tableEl.innerHTML = sortedResults
           .map(
             (r, i) => `
-          <tr class="${i === 0 ? 'rank-1' : ''}" data-entry="${r.entryId}">
-            <td class="rank">${rankCell(i)}</td>
-            <td>
-              <div class="team-cell">
-                <div class="team-text">
-                  <span class="team">${r.teamName}</span>
-                  <span class="manager">${r.managerName}</span>
-                </div>
+          <div class="row ${i === 0 ? 'rank-1' : ''}" data-entry="${r.entryId}">
+            <div class="row-left">
+              <span class="rank">${rankCell(i)}</span>
+              <div class="team-text">
+                <div class="team">${r.teamName}</div>
+                <div class="manager">${r.managerName}</div>
               </div>
-            </td>
-            <td class="gw-cell"><span class="score-chip">${r.gwPoints}</span></td>
-            <td class="points-cell"><span class="score-chip">${r.totalPoints}</span></td>
-          </tr>`
+            </div>
+            <div class="row-right">
+              <span class="score-chip accent">${r.gwPoints}</span>
+              <span class="score-chip">${r.totalPoints}</span>
+            </div>
+          </div>`
           )
           .join('');
 
+        tableEl.querySelectorAll('.row[data-entry]').forEach((row) => {
+          row.addEventListener('click', () => toggleSquad(row, row.dataset.entry));
+        });
+
         if (data.currentLeaders && data.currentLeaders.length > 0 && !data.currentGameweekLocked) {
           const names = data.currentLeaders.map((l) => l.teamName).join(', ');
-          leaderTextEl.innerHTML = `กำลังนำอยู่: <b>${names}</b> — ${data.currentLeaders[0].gwPoints} แต้ม (ยังไม่ล็อกแต้มพิเศษ)`;
+          leaderTextEl.innerHTML = `กำลังนำอยู่: <b>${names}</b>`;
+          leaderTextEl.insertAdjacentHTML(
+            'beforeend',
+            `<span class="val" style="float:right">${data.currentLeaders[0].gwPoints}</span>`
+          );
           bannerEl.style.display = 'flex';
         } else {
           bannerEl.style.display = 'none';
         }
 
-        if (data.currentGameweek) {
-          currentGwForSquad = data.currentGameweek;
-        }
-
         statusEl.style.display = 'none';
-        tableEl.style.display = 'table';
+        tableEl.style.display = 'block';
         document.getElementById('standings-updated').textContent =
           'อัปเดตล่าสุด: ' + new Date(data.updatedAt).toLocaleString('th-TH');
       } catch (err) {
@@ -450,7 +365,6 @@
     async function loadBonus() {
       const statusEl = document.getElementById('bonus-status');
       const tableEl = document.getElementById('bonus-table');
-      const tbody = document.getElementById('bonus-body');
 
       try {
         const res = await fetch('/api/bonus');
@@ -462,35 +376,35 @@
           return;
         }
 
-        tbody.innerHTML = data.leaderboard
+        tableEl.innerHTML = data.leaderboard
           .map(
             (r, i) => `
-          <tr class="${i === 0 ? 'rank-1' : ''}">
-            <td class="rank">${rankCell(i)}</td>
-            <td>
-              <div class="team-cell">
-                <div class="team-text">
-                  <span class="team">${r.teamName}${
-                    r.liveBonus > 0
-                      ? '<span class="live-badge">LIVE</span>'
-                      : r.recentDraw
-                      ? '<span class="draw-badge">DRAW</span>'
-                      : r.recentWin
-                      ? '<span class="win-badge">WIN</span>'
-                      : ''
-                  }</span>
-                  <span class="manager">${r.managerName}</span>
-                </div>
+          <div class="row ${i === 0 ? 'rank-1' : ''}">
+            <div class="row-left">
+              <span class="rank">${rankCell(i)}</span>
+              <div class="team-text">
+                <div class="team">${r.teamName}${
+                  r.liveBonus > 0
+                    ? '<span class="live-badge">LIVE</span>'
+                    : r.recentDraw
+                    ? '<span class="draw-badge">DRAW</span>'
+                    : r.recentWin
+                    ? '<span class="win-badge">WIN</span>'
+                    : ''
+                }</div>
+                <div class="manager">${r.managerName}</div>
               </div>
-            </td>
-            <td>${r.winsCount}</td>
-            <td class="bonus-cell"><span class="score-chip">${r.displayTotal}</span></td>
-          </tr>`
+            </div>
+            <div class="row-right">
+              <span class="score-chip" style="min-width:20px">${r.winsCount}</span>
+              <span class="score-chip accent">${r.displayTotal}</span>
+            </div>
+          </div>`
           )
           .join('');
 
         statusEl.style.display = 'none';
-        tableEl.style.display = 'table';
+        tableEl.style.display = 'block';
         document.getElementById('bonus-updated').textContent =
           'อัปเดตล่าสุด: ' + new Date(data.updatedAt).toLocaleString('th-TH');
       } catch (err) {
@@ -515,7 +429,7 @@
         listEl.innerHTML = data.feed
           .map(
             (f) => `
-          <div class="feed-card ${f.type}">
+          <div class="feed-card glass ${f.type}">
             <div class="feed-gw">Gameweek ${f.gameweek}</div>
             <div class="feed-msg">${f.message}</div>
           </div>`
@@ -528,51 +442,6 @@
       }
     }
 
-    let deadlineTarget = null;
-    let deadlineGw = null;
-
-    function renderCountdown() {
-      const subEl = document.getElementById('sub-text');
-      if (!deadlineTarget) return;
-
-      const diff = deadlineTarget - Date.now();
-      if (diff <= 0) {
-        subEl.textContent = `ปิดรับเปลี่ยนตัว GW${deadlineGw} แล้ว`;
-        return;
-      }
-
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-      const mins = Math.floor((diff / (1000 * 60)) % 60);
-
-      let parts = [];
-      if (days > 0) parts.push(`${days} วัน`);
-      parts.push(`${hours} ชม.`);
-      parts.push(`${mins} นาที`);
-
-      subEl.textContent = `ปิดรับเปลี่ยนตัว GW${deadlineGw} ในอีก ${parts.join(' ')}`;
-    }
-
-    async function loadDeadline() {
-      const subEl = document.getElementById('sub-text');
-      try {
-        const res = await fetch('/api/deadline');
-        if (!res.ok) throw new Error('โหลดข้อมูลไม่สำเร็จ');
-        const data = await res.json();
-
-        if (!data.deadline) {
-          subEl.textContent = data.message || 'ไม่มี deadline ถัดไป';
-          return;
-        }
-
-        deadlineTarget = new Date(data.deadline).getTime();
-        deadlineGw = data.gameweek;
-        renderCountdown();
-      } catch (err) {
-        subEl.textContent = '-';
-      }
-    }
-
     loadDeadline();
     loadStandings();
     loadBonus();
@@ -580,7 +449,7 @@
     setInterval(renderCountdown, 60 * 1000);
     setInterval(loadDeadline, 30 * 60 * 1000);
     setInterval(loadStandings, 2 * 60 * 1000);
-    setInterval(loadBonus, 5 * 60 * 1000);
+    setInterval(loadBonus, 2 * 60 * 1000);
     setInterval(loadFeed, 5 * 60 * 1000);
   </script>
 </body>
