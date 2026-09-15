@@ -92,7 +92,7 @@ export default async function handler(req, res) {
     if (bestStreak.entryId && bestStreak.streak > 1) {
       cards.push({
         icon: '🔥',
-        label: 'สตรีคชนะยาวสุด',
+        label: 'ชนะติดต่อกันบ่อยสุดตลอดกาล',
         value: `${nameOf[bestStreak.entryId]} — ชนะติดกัน ${bestStreak.streak} สัปดาห์`,
       });
     }
