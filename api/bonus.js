@@ -87,13 +87,17 @@ export default async function handler(req, res) {
       bucket.displayTotal = bucket.totalBonus + bucket.liveBonus;
     }
 
-    // ทีมที่ชนะ gameweek ล่าสุดที่ล็อกไปแล้ว (ไม่ใช่ live) ให้ติดป้าย WIN
+    // ทีมที่ชนะ/เสมอ gameweek ล่าสุดที่ล็อกไปแล้ว (ไม่ใช่ live) ให้ติดป้าย WIN หรือ DRAW
     const lockedGameweeks = weekly.map((w) => w.gameweek);
     const latestLockedGameweek = lockedGameweeks.length ? Math.max(...lockedGameweeks) : null;
+    const latestWinners = weekly.filter((w) => w.gameweek === latestLockedGameweek && w.bonus_awarded > 0);
+    const latestWasDraw = latestWinners.length > 1;
+    const latestWinnerIds = new Set(latestWinners.map((w) => w.entry_id));
 
     for (const bucket of Object.values(byEntry)) {
-      bucket.recentWin =
-        latestLockedGameweek !== null && bucket.wins.some((w) => w.gameweek === latestLockedGameweek);
+      const wasInLatest = latestWinnerIds.has(bucket.entryId);
+      bucket.recentWin = wasInLatest && !latestWasDraw;
+      bucket.recentDraw = wasInLatest && latestWasDraw;
     }
 
     const leaderboard = Object.values(byEntry).sort((a, b) => b.displayTotal - a.displayTotal);
