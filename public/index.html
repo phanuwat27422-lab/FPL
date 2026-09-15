@@ -175,6 +175,7 @@
 
     <div id="leader-banner" class="banner glass" style="display:none">
       <span id="leader-text"></span>
+      <span id="leader-value" class="val"></span>
     </div>
 
     <div class="tabs glass">
@@ -344,10 +345,7 @@
         if (data.currentLeaders && data.currentLeaders.length > 0 && !data.currentGameweekLocked) {
           const names = data.currentLeaders.map((l) => l.teamName).join(', ');
           leaderTextEl.innerHTML = `กำลังนำอยู่: <b>${names}</b>`;
-          leaderTextEl.insertAdjacentHTML(
-            'beforeend',
-            `<span class="val" style="float:right">${data.currentLeaders[0].gwPoints}</span>`
-          );
+          document.getElementById('leader-value').textContent = data.currentLeaders[0].gwPoints;
           bannerEl.style.display = 'flex';
         } else {
           bannerEl.style.display = 'none';
