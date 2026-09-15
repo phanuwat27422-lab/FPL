@@ -65,14 +65,17 @@ export default async function handler(req, res) {
     )[0];
     if (topWins) {
       const [entryId, w] = topWins;
-      const parts = [];
-      if (w.solo > 0) parts.push(`ชนะเดี่ยว ${w.solo} ครั้ง`);
-      if (w.draw > 0) parts.push(`เสมอ ${w.draw} ครั้ง`);
-      cards.push({
-        icon: '🏆',
-        label: 'แชมป์บ่อยสุดตลอดกาล',
-        value: `${nameOf[entryId] || `#${entryId}`} — ${parts.join(' และ ')}`,
-      });
+      const total = w.solo + w.draw * 0.5;
+      if (total > 1) {
+        const parts = [];
+        if (w.solo > 0) parts.push(`ชนะเดี่ยว ${w.solo} ครั้ง`);
+        if (w.draw > 0) parts.push(`เสมอ ${w.draw} ครั้ง`);
+        cards.push({
+          icon: '🏆',
+          label: 'แชมป์บ่อยสุดตลอดกาล',
+          value: `${nameOf[entryId] || `#${entryId}`} — ${parts.join(' และ ')}`,
+        });
+      }
     }
 
     // 2) สตรีคชนะยาวสุด
