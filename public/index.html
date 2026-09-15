@@ -189,7 +189,7 @@
   .bonus-cell .score-chip { background: rgba(255,90,31,0.15); color: var(--accent); font-size: 15px; }
   .live-badge {
     display: inline-block;
-    margin-left: 5px;
+    margin-left: 6px;
     font-size: 9px;
     font-weight: 800;
     letter-spacing: 0.05em;
@@ -197,7 +197,20 @@
     background: rgba(255,59,48,0.14);
     padding: 2px 5px;
     border-radius: 3px;
+    vertical-align: middle;
     animation: pulse 1.3s ease-in-out infinite;
+  }
+  .win-badge {
+    display: inline-block;
+    margin-left: 6px;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    color: #04241a;
+    background: var(--lime, #22c55e);
+    padding: 2px 5px;
+    border-radius: 3px;
+    vertical-align: middle;
   }
 
   .status { color: var(--muted); font-size: 13px; padding: 20px 0; text-align: center; }
@@ -445,16 +458,15 @@
             <td>
               <div class="team-cell">
                 <div class="team-text">
-                  <span class="team">${r.teamName}</span>
+                  <span class="team">${r.teamName}${
+                    r.liveBonus > 0 ? '<span class="live-badge">LIVE</span>' : r.recentWin ? '<span class="win-badge">WIN</span>' : ''
+                  }</span>
                   <span class="manager">${r.managerName}</span>
                 </div>
               </div>
             </td>
             <td>${r.winsCount}</td>
-            <td class="bonus-cell">
-              <span class="score-chip">${r.displayTotal}</span>
-              ${r.liveBonus > 0 ? '<span class="live-badge">LIVE</span>' : ''}
-            </td>
+            <td class="bonus-cell"><span class="score-chip">${r.displayTotal}</span></td>
           </tr>`
           )
           .join('');
