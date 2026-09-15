@@ -102,11 +102,17 @@ export default async function handler(req, res) {
 
     const leaderboard = Object.values(byEntry).sort((a, b) => b.displayTotal - a.displayTotal);
 
+    const recentWinnerNames = leaderboard
+      .filter((b) => b.recentWin || b.recentDraw)
+      .map((b) => b.teamName);
+
     res.setHeader('Cache-Control', 's-maxage=120, stale-while-revalidate=300');
     return res.status(200).json({
       updatedAt: new Date().toISOString(),
       currentGameweekLocked,
       latestLockedGameweek,
+      recentWinnerNames,
+      recentWasDraw: latestWasDraw,
       leaderboard,
     });
   } catch (err) {
