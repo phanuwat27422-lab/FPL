@@ -212,6 +212,18 @@
     border-radius: 3px;
     vertical-align: middle;
   }
+  .draw-badge {
+    display: inline-block;
+    margin-left: 6px;
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    color: #04203a;
+    background: #4ea1ff;
+    padding: 2px 5px;
+    border-radius: 3px;
+    vertical-align: middle;
+  }
 
   .status { color: var(--muted); font-size: 13px; padding: 20px 0; text-align: center; }
   .updated { color: var(--muted); font-size: 10.5px; margin-top: 8px; text-align: right; }
@@ -459,7 +471,13 @@
               <div class="team-cell">
                 <div class="team-text">
                   <span class="team">${r.teamName}${
-                    r.liveBonus > 0 ? '<span class="live-badge">LIVE</span>' : r.recentWin ? '<span class="win-badge">WIN</span>' : ''
+                    r.liveBonus > 0
+                      ? '<span class="live-badge">LIVE</span>'
+                      : r.recentDraw
+                      ? '<span class="draw-badge">DRAW</span>'
+                      : r.recentWin
+                      ? '<span class="win-badge">WIN</span>'
+                      : ''
                   }</span>
                   <span class="manager">${r.managerName}</span>
                 </div>
