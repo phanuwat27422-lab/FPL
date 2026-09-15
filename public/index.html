@@ -29,7 +29,7 @@
     margin: 0;
     padding: 20px 14px 60px;
   }
-  .wrap { max-width: 460px; margin: 0 auto; }
+  .wrap { max-width: min(480px, 94vw); margin: 0 auto; }
   .numeric { font-family: 'Rajdhani', sans-serif; font-variant-numeric: tabular-nums; }
 
   .glass {
@@ -97,9 +97,9 @@
   .row-right { display: flex; gap: 6px; flex-shrink: 0; }
   .score-chip {
     display: inline-block;
-    min-width: 28px;
+    width: 38px;
     text-align: center;
-    padding: 3px 7px;
+    padding: 3px 0;
     border-radius: 7px;
     background: rgba(255,255,255,0.09);
     font-family: 'Rajdhani', sans-serif;
@@ -394,7 +394,7 @@
               </div>
             </div>
             <div class="row-right">
-              <span class="score-chip" style="min-width:20px">${r.winsCount}</span>
+              <span class="score-chip">${r.winsCount}</span>
               <span class="score-chip accent">${r.displayTotal}</span>
             </div>
           </div>`
