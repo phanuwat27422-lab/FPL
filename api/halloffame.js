@@ -52,19 +52,26 @@ export default async function handler(req, res) {
 
     const cards = [];
 
-    // 1) แชมป์บ่อยสุดตลอดกาล (นับจาก winsCount รวม)
+    // 1) แชมป์บ่อยสุดตลอดกาล (แยกนับชนะเดี่ยว/เสมอให้ชัดเจน ไม่ปนกันเป็นเลขทศนิยม)
     const winsByEntry = {};
     for (const w of weekly) {
-      if (w.bonus_awarded > 0) winsByEntry[w.entry_id] = (winsByEntry[w.entry_id] || 0) + w.bonus_awarded / 150;
+      if (w.bonus_awarded <= 0) continue;
+      if (!winsByEntry[w.entry_id]) winsByEntry[w.entry_id] = { solo: 0, draw: 0 };
+      if (w.bonus_awarded === 150) winsByEntry[w.entry_id].solo += 1;
+      else winsByEntry[w.entry_id].draw += 1;
     }
-    const topWins = Object.entries(winsByEntry).sort((a, b) => b[1] - a[1])[0];
+    const topWins = Object.entries(winsByEntry).sort(
+      (a, b) => b[1].solo + b[1].draw * 0.5 - (a[1].solo + a[1].draw * 0.5)
+    )[0];
     if (topWins) {
-      const [entryId, count] = topWins;
-      const rounded = Math.round(count * 100) / 100;
+      const [entryId, w] = topWins;
+      const parts = [];
+      if (w.solo > 0) parts.push(`ชนะเดี่ยว ${w.solo} ครั้ง`);
+      if (w.draw > 0) parts.push(`เสมอ ${w.draw} ครั้ง`);
       cards.push({
         icon: '🏆',
         label: 'แชมป์บ่อยสุดตลอดกาล',
-        value: `${nameOf[entryId] || `#${entryId}`} — ชนะ/เสมอรวม ${rounded} ครั้ง`,
+        value: `${nameOf[entryId] || `#${entryId}`} — ${parts.join(' และ ')}`,
       });
     }
 
