@@ -5,8 +5,8 @@
 
 import { getSupabase } from '../lib/supabase.js';
 
-// นับจากสัปดาห์ที่ยังไม่ backfill ด้วยมือ (GW1-3 ไม่มีคะแนนจริง)
-const RELIABLE_POINTS_FROM_GAMEWEEK = 4;
+// GW1-3 อัปเดตเป็นคะแนนจริงแล้ว นับรวมได้ทั้งหมดตั้งแต่ GW1
+const RELIABLE_POINTS_FROM_GAMEWEEK = 1;
 
 function longestStreak(sortedRows) {
   let best = 0;
@@ -92,7 +92,7 @@ export default async function handler(req, res) {
     if (bestStreak.entryId && bestStreak.streak > 1) {
       cards.push({
         icon: '🔥',
-        label: 'ชนะติดต่อกันบ่อยสุดตลอดกาล',
+        label: 'สตรีคชนะยาวสุด',
         value: `${nameOf[bestStreak.entryId]} — ชนะติดกัน ${bestStreak.streak} สัปดาห์`,
       });
     }
