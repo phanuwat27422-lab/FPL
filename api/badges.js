@@ -54,7 +54,7 @@ export default async function handler(req, res) {
     const badgesByEntry = {};
     for (const [entryId, c] of Object.entries(counts)) {
       const list = [];
-      if (c.win > 0) list.push({ emoji: '🏆', label: `ชนะเดี่ยว ${c.win} ครั้ง`, count: c.win });
+      if (c.win > 0) list.push({ emoji: '🏆', label: `ชนะ ${c.win} ครั้ง`, count: c.win });
       if (c.draw > 0) list.push({ emoji: '🤝', label: `เสมอ ${c.draw} ครั้ง`, count: c.draw });
       if (c.steal > 0) list.push({ emoji: '🔪', label: `ปาดชนะคนอื่นช่วงท้ายเกม ${c.steal} ครั้ง`, count: c.steal });
       badgesByEntry[entryId] = list;
