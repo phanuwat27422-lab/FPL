@@ -105,7 +105,7 @@ export default async function handler(req, res) {
       const maxNames = [...new Set(maxRows.map((r) => nameOf[r.entry_id] || `#${r.entry_id}`))];
       cards.push({
         icon: '💯',
-        label: 'คะแนน GW สูงสุด',
+        label: 'คะแนนสูงสุดตลอดกาล',
         value: `${joinNames(maxNames)} — ${maxPoints} แต้ม (GW${maxRows[0].gameweek})`,
       });
 
@@ -114,7 +114,7 @@ export default async function handler(req, res) {
       const minNames = [...new Set(minRows.map((r) => nameOf[r.entry_id] || `#${r.entry_id}`))];
       cards.push({
         icon: '📉',
-        label: 'คะแนน GW ต่ำสุด',
+        label: 'คะแนนต่ำสุดตลอดกาล',
         value: `${joinNames(minNames)} — ${minPoints} แต้ม (GW${minRows[0].gameweek})`,
       });
     }
