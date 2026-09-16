@@ -102,20 +102,20 @@ export default async function handler(req, res) {
     if (reliableRows.length > 0) {
       const maxPoints = Math.max(...reliableRows.map((r) => r.gw_points));
       const maxRows = reliableRows.filter((r) => r.gw_points === maxPoints);
-      const maxNames = [...new Set(maxRows.map((r) => nameOf[r.entry_id] || `#${r.entry_id}`))];
+      const maxParts = maxRows.map((r) => `${nameOf[r.entry_id] || `#${r.entry_id}`} (GW${r.gameweek})`);
       cards.push({
         icon: '💯',
         label: 'คะแนนสูงสุดตลอดกาล',
-        value: `${joinNames(maxNames)} — ${maxPoints} แต้ม (GW${maxRows[0].gameweek})`,
+        value: `${joinNames(maxParts)} — ${maxPoints} แต้ม`,
       });
 
       const minPoints = Math.min(...reliableRows.map((r) => r.gw_points));
       const minRows = reliableRows.filter((r) => r.gw_points === minPoints);
-      const minNames = [...new Set(minRows.map((r) => nameOf[r.entry_id] || `#${r.entry_id}`))];
+      const minParts = minRows.map((r) => `${nameOf[r.entry_id] || `#${r.entry_id}`} (GW${r.gameweek})`);
       cards.push({
         icon: '📉',
         label: 'คะแนนต่ำสุดตลอดกาล',
-        value: `${joinNames(minNames)} — ${minPoints} แต้ม (GW${minRows[0].gameweek})`,
+        value: `${joinNames(minParts)} — ${minPoints} แต้ม`,
       });
     }
 
