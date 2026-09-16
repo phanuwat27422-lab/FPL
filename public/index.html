@@ -257,7 +257,7 @@
       const list = badgesByEntry[entryId];
       if (!list || list.length === 0) return '';
       return list
-        .map((b) => `<span class="badge-icon" data-label="${b.label}">${b.emoji}</span>`)
+        .map((b) => `<span class="badge-icon" data-label="${b.label}">${b.emoji.repeat(b.count)}</span>`)
         .join('');
     }
 
