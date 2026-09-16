@@ -1,7 +1,7 @@
 // api/badges.js
 // GET /api/badges
-// เหรียญตราสะสมของแต่ละทีม คำนวณสดจาก weekly_results + gw_leader_snapshots
-// ไม่มีตารางแยกเก็บ badge เพราะข้อมูลต้นทางมีพอคำนวณสดได้เร็วอยู่แล้ว
+// เหรียญตราสะสมของแต่ละทีม นับจำนวนครั้งจริง แสดงซ้ำตามจำนวน (ชนะ 3 ครั้ง = 🏆🏆🏆)
+// คำนวณสดจาก weekly_results + gw_leader_snapshots ไม่มีตารางแยกเก็บ
 
 import { getSupabase } from '../lib/supabase.js';
 
@@ -27,49 +27,36 @@ export default async function handler(req, res) {
       byGameweek[w.gameweek].push(w);
     }
 
-    const flags = {}; // entryId -> { hasWin, hasDraw, hasSteal, wasStolenFrom }
+    const counts = {}; // entryId -> { win, draw, steal }
     const ensure = (id) => {
-      if (!flags[id]) flags[id] = { hasWin: false, hasDraw: false, hasSteal: false, wasStolenFrom: false };
-      return flags[id];
+      if (!counts[id]) counts[id] = { win: 0, draw: 0, steal: 0 };
+      return counts[id];
     };
 
     for (const w of weekly) {
       if (w.bonus_awarded <= 0) continue;
-      const f = ensure(w.entry_id);
-      if (w.bonus_awarded === 150) f.hasWin = true;
-      else f.hasDraw = true;
+      const c = ensure(w.entry_id);
+      if (w.bonus_awarded === 150) c.win += 1;
+      else c.draw += 1;
     }
 
     for (const [gwStr, rows] of Object.entries(byGameweek)) {
       const gameweek = Number(gwStr);
       const winners = rows.filter((r) => r.bonus_awarded > 0);
+      if (winners.length !== 1) continue; // เสมอไม่นับเป็นปาดชนะ
+      const winnerId = winners[0].entry_id;
       const snapshotIds = snapshotByGw[gameweek];
       if (!snapshotIds) continue;
-
-      if (winners.length === 1) {
-        const winnerId = winners[0].entry_id;
-        const wasSteal = snapshotIds.length !== 1 || snapshotIds[0] !== winnerId;
-        if (wasSteal) {
-          ensure(winnerId).hasSteal = true;
-          for (const id of snapshotIds) {
-            if (id !== winnerId) ensure(id).wasStolenFrom = true;
-          }
-        }
-      } else if (winners.length > 1) {
-        const winnerIds = new Set(winners.map((w) => w.entry_id));
-        for (const id of snapshotIds) {
-          if (!winnerIds.has(id)) ensure(id).wasStolenFrom = true;
-        }
-      }
+      const wasSteal = snapshotIds.length !== 1 || snapshotIds[0] !== winnerId;
+      if (wasSteal) ensure(winnerId).steal += 1;
     }
 
     const badgesByEntry = {};
-    for (const [entryId, f] of Object.entries(flags)) {
+    for (const [entryId, c] of Object.entries(counts)) {
       const list = [];
-      if (f.hasWin) list.push({ emoji: '🏆', label: 'เคยชนะเดี่ยวอย่างน้อย 1 ครั้ง' });
-      if (f.hasDraw) list.push({ emoji: '🤝', label: 'เคยเสมอกับคนอื่นมาก่อน' });
-      if (f.hasSteal) list.push({ emoji: '🔪', label: 'เคยปาดชนะคนอื่นช่วงท้ายเกม' });
-      if (f.wasStolenFrom) list.push({ emoji: '😭', label: 'เคยโดนปาดชนะช่วงท้ายเกม' });
+      if (c.win > 0) list.push({ emoji: '🏆', label: `ชนะเดี่ยว ${c.win} ครั้ง`, count: c.win });
+      if (c.draw > 0) list.push({ emoji: '🤝', label: `เสมอ ${c.draw} ครั้ง`, count: c.draw });
+      if (c.steal > 0) list.push({ emoji: '🔪', label: `ปาดชนะคนอื่นช่วงท้ายเกม ${c.steal} ครั้ง`, count: c.steal });
       badgesByEntry[entryId] = list;
     }
 
