@@ -184,6 +184,21 @@
   .hof-icon { font-size: 20px; flex-shrink: 0; }
   .hof-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 2px; }
   .hof-value { font-size: 13px; font-weight: 600; color: #fff; }
+
+  .badge-icon { font-size: 12px; margin-left: 3px; cursor: pointer; }
+  .badge-tooltip {
+    position: fixed;
+    background: rgba(20,25,35,0.95);
+    backdrop-filter: blur(6px);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 11px;
+    color: #fff;
+    z-index: 50;
+    display: none;
+    white-space: nowrap;
+  }
 </style>
 </head>
 <body>
@@ -228,12 +243,53 @@
     <div class="footnote"></div>
   </div>
 
+  <div id="badge-tooltip" class="badge-tooltip"></div>
+
   <script>
     const LEAGUE_ID = '477187';
     const MEDALS = ['🥇', '🥈', '🥉'];
     let currentGwForSquad = null;
     let standingsState = null;
     let bonusState = null;
+    let badgesByEntry = {};
+
+    function renderBadges(entryId) {
+      const list = badgesByEntry[entryId];
+      if (!list || list.length === 0) return '';
+      return list
+        .map((b) => `<span class="badge-icon" data-label="${b.label}">${b.emoji}</span>`)
+        .join('');
+    }
+
+    async function loadBadges() {
+      try {
+        const res = await fetch('/api/badges');
+        if (!res.ok) return;
+        const data = await res.json();
+        badgesByEntry = data.badgesByEntry || {};
+      } catch (err) {
+        // เงียบไว้ ไม่ให้กระทบส่วนอื่นถ้าโหลด badge ไม่สำเร็จ
+      }
+    }
+
+    document.addEventListener(
+      'click',
+      (e) => {
+        const tooltip = document.getElementById('badge-tooltip');
+        const badge = e.target.closest('.badge-icon');
+        if (badge) {
+          e.stopPropagation();
+          const rect = badge.getBoundingClientRect();
+          tooltip.textContent = badge.dataset.label;
+          tooltip.style.display = 'block';
+          tooltip.style.left = Math.max(8, rect.left - 20) + 'px';
+          tooltip.style.top = rect.bottom + 6 + 'px';
+        } else {
+          tooltip.style.display = 'none';
+        }
+      },
+      true
+    );
 
     const CELEBRATE_WIN_MESSAGES = [
       '🎉 {names} คว้าแต้มพิเศษไปครองเต็มๆ เก่งมาก!',
@@ -430,7 +486,7 @@
             <div class="row-left">
               <span class="rank">${rankCell(i)}</span>
               <div class="team-text">
-                <div class="team">${r.teamName}</div>
+                <div class="team">${r.teamName}${renderBadges(r.entryId)}</div>
                 <div class="manager">${r.managerName}</div>
               </div>
             </div>
@@ -584,7 +640,7 @@
     }
 
     loadDeadline();
-    loadStandings();
+    loadBadges().then(loadStandings);
     loadBonus();
     loadFeed();
     loadHof();
@@ -594,6 +650,7 @@
     setInterval(loadBonus, 2 * 60 * 1000);
     setInterval(loadFeed, 5 * 60 * 1000);
     setInterval(loadHof, 5 * 60 * 1000);
+    setInterval(loadBadges, 5 * 60 * 1000);
   </script>
 </body>
 </html>
