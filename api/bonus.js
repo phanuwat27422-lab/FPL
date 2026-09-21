@@ -2,11 +2,13 @@
 // GET /api/bonus
 // ตารางโบนัสสะสม: ยอดจริงที่ล็อกแล้ว (permanent) + แต้มคาดการณ์สดของสัปดาห์ที่ยังไม่จบ (liveBonus)
 // liveBonus ไม่เคยถูกบันทึกลง database เป็นแค่ตัวเลขคาดการณ์ให้ดูสนุกระหว่างสัปดาห์เท่านั้น
+//
+// สูตรโบนัส: pool ต่อสัปดาห์ = 150 x (จำนวนผู้เล่นทั้งหมด - 1) หารเท่ากันตามจำนวนผู้ชนะ
+// ตัวเงินจึงไม่คงที่ 150 อีกต่อไป การนับ "ชนะกี่ครั้ง" เลยดูจากจำนวนคนที่ชนะร่วมกันในแต่ละสัปดาห์แทน
+// (ไม่ใช่หารด้วยค่าคงที่) เพื่อไม่ให้ผูกติดกับจำนวนเงินที่เปลี่ยนได้
 
 import { getSupabase } from '../lib/supabase.js';
 import { getBootstrap, getLeagueStandings } from '../lib/fpl.js';
-
-const BONUS_POOL = 150;
 
 export default async function handler(req, res) {
   const leagueId = process.env.FPL_LEAGUE_ID || '477187';
@@ -38,12 +40,18 @@ export default async function handler(req, res) {
       };
     }
 
+    // นับจำนวนผู้ชนะร่วมกันของแต่ละ gameweek ไว้ก่อน (เพื่อคำนวณ 1/n ต่อคนถ้าเสมอ)
+    const winnerCountByGw = {};
+    for (const w of weekly) {
+      if (w.bonus_awarded > 0) winnerCountByGw[w.gameweek] = (winnerCountByGw[w.gameweek] || 0) + 1;
+    }
+
     for (const w of weekly) {
       const bucket = byEntry[w.entry_id];
       if (!bucket) continue;
       bucket.totalBonus += w.bonus_awarded;
       if (w.bonus_awarded > 0) {
-        bucket.winsCount += w.bonus_awarded / BONUS_POOL;
+        bucket.winsCount += 1 / winnerCountByGw[w.gameweek];
         bucket.wins.push({ gameweek: w.gameweek, gwPoints: w.gw_points, bonus: w.bonus_awarded });
       }
     }
@@ -68,7 +76,8 @@ export default async function handler(req, res) {
 
           if (maxPoints > 0) {
             const liveWinners = entries.filter((e) => e.event_total === maxPoints);
-            const liveBonusEach = Math.floor(BONUS_POOL / liveWinners.length);
+            const livePool = 150 * (entries.length - 1);
+            const liveBonusEach = Math.floor(livePool / liveWinners.length);
 
             for (const w of liveWinners) {
               if (byEntry[w.entry]) {
