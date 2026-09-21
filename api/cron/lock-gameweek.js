@@ -7,7 +7,8 @@
 import { getSupabase } from '../../lib/supabase.js';
 import { getBootstrap, getLeagueStandings, getEntryHistory, getFinishedEvents } from '../../lib/fpl.js';
 
-const BONUS_POOL = 150;
+// เปลี่ยนเป็น dynamic pool ต่อไปนี้: pool = 150 x (จำนวนผู้เล่นทั้งหมด - 1)
+// ไม่ใช้ค่าคงที่อีกต่อไป เพราะจำนวนผู้เล่นเปลี่ยนได้ถ้ามีคนเข้าร่วมเพิ่มระหว่างฤดูกาล
 
 export default async function handler(req, res) {
   const auth = req.headers.authorization;
@@ -101,7 +102,8 @@ export default async function handler(req, res) {
 
       const maxPoints = Math.max(...rows.map((r) => r.points));
       const winners = rows.filter((r) => r.points === maxPoints);
-      const bonusEach = Math.floor(BONUS_POOL / winners.length);
+      const pool = 150 * (entries.length - 1);
+      const bonusEach = Math.floor(pool / winners.length);
       const winnerIds = new Set(winners.map((w) => w.entry));
 
       const dbRows = rows.map((r) => ({
