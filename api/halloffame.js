@@ -52,12 +52,16 @@ export default async function handler(req, res) {
 
     const cards = [];
 
-    // 1) แชมป์บ่อยสุดตลอดกาล (แยกนับชนะเดี่ยว/เสมอให้ชัดเจน ไม่ปนกันเป็นเลขทศนิยม)
+    // 1) แชมป์บ่อยสุดตลอดกาล (เช็คว่าชนะเดี่ยวหรือเสมอจากจำนวนผู้ชนะร่วมในสัปดาห์นั้น ไม่ใช่จำนวนเงิน)
+    const winnerCountByGw = {};
+    for (const w of weekly) {
+      if (w.bonus_awarded > 0) winnerCountByGw[w.gameweek] = (winnerCountByGw[w.gameweek] || 0) + 1;
+    }
     const winsByEntry = {};
     for (const w of weekly) {
       if (w.bonus_awarded <= 0) continue;
       if (!winsByEntry[w.entry_id]) winsByEntry[w.entry_id] = { solo: 0, draw: 0 };
-      if (w.bonus_awarded === 150) winsByEntry[w.entry_id].solo += 1;
+      if (winnerCountByGw[w.gameweek] === 1) winsByEntry[w.entry_id].solo += 1;
       else winsByEntry[w.entry_id].draw += 1;
     }
     const topWins = Object.entries(winsByEntry).sort(
