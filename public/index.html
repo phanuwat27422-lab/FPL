@@ -80,6 +80,7 @@
     color: var(--muted);
     font-size: 11.5px;
     font-weight: 600;
+    white-space: nowrap;
     cursor: pointer;
     transition: background 0.15s, color 0.15s;
   }
@@ -225,15 +226,21 @@
   .hof-extra { text-align: center; font-size: 12px; color: #d5c9b5; }
 
   .hof-section { margin: 18px 0 8px; font-family: Georgia, serif; color: #e4c47e; font-size: 14px; letter-spacing: 2px; }
-  .hof-gwstrip { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 4px; }
-  .hof-gwitem { flex: 0 0 auto; min-width: 104px; background: #1a1712; border: 1px solid #51402a; border-radius: 10px; padding: 10px 12px; color: #e7d3a8; font-size: 10px; letter-spacing: 1px; }
-  .hof-gwitem b { display: block; margin-top: 4px; color: #fff; font-size: 12px; letter-spacing: 0; }
-  .hof-gwitem span { display: block; margin-top: 2px; color: var(--hg); font-size: 11px; letter-spacing: 0; }
   #hof-stage .hof-card { border: 1px solid #624923; border-radius: 12px; background: linear-gradient(145deg, #181511, #0b0a09); backdrop-filter: none; -webkit-backdrop-filter: none; box-shadow: 0 6px 14px #0008; padding: 13px 14px; }
   #hof-stage .hof-icon { font-size: 24px; filter: drop-shadow(0 0 8px #e6b75c88); }
   #hof-stage .hof-label { color: var(--hg); letter-spacing: 1px; }
   #hof-stage .hof-value { color: #f5eee1; }
 
+  .chart-title { font-size: 12px; color: #e4c47e; letter-spacing: 1px; margin-bottom: 6px; }
+  .feed-card .feed-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+  .feed-card .feed-win { font-size: 14px; font-weight: 700; color: #fff; }
+  .feed-card .feed-pts { font-size: 11px; color: var(--gold); white-space: nowrap; }
+  .feed-card.live { border-left-color: var(--live); background: linear-gradient(90deg, rgba(255,106,106,.12), rgba(20,17,13,.82)); }
+  .feed-card.live .feed-gw span { color: var(--live); font-weight: 800; animation: pulse 1.4s ease-in-out infinite; }
+  .chart-legend { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .chart-lg { display: flex; align-items: center; gap: 5px; font-size: 11px; padding: 3px 8px; border: 1px solid rgba(217,173,91,.25); border-radius: 20px; cursor: pointer; user-select: none; background: none; color: #f5eee1; font-family: inherit; }
+  .chart-lg i { width: 9px; height: 9px; border-radius: 50%; display: block; }
+  .chart-lg.off { opacity: .35; }
   .badge-icon { font-size: 12px; margin-left: 3px; cursor: pointer; }
   .badge-tooltip {
     position: fixed;
@@ -293,8 +300,15 @@
       <div class="hof-hero page-hero">
         <div class="hof-eyebrow">✦ F A N T A S Y &nbsp; L E A G U E ✦</div>
         <div class="hof-title">HIGHLIGHTS</div>
-        <div class="hof-tag">STORIES OF THE WEEK</div>
+        <div class="hof-tag">THE RACE &amp; STORIES OF THE WEEK</div>
       </div>
+      <div id="chart-box" class="glass" style="display:none;padding:14px;margin-bottom:6px">
+        <div class="chart-title">รายได้สะสมรายสัปดาห์</div>
+        <svg id="chart-svg" viewBox="0 0 420 250" style="width:100%;height:auto;display:block"></svg>
+        <div class="chart-legend" id="chart-legend"></div>
+        <div class="updated" style="text-align:left;margin-top:8px">แตะชื่อเพื่อซ่อน/แสดงเส้น · นับเฉพาะสัปดาห์ที่ล็อกแล้ว</div>
+      </div>
+      <div class="hof-section">WEEK BY WEEK</div>
       <div id="feed-status" class="status">กำลังโหลด...</div>
       <div id="feed-list"></div>
     </div>
@@ -309,8 +323,6 @@
         </div>
         <div class="hof-room"><div class="hof-arch"></div><div class="hof-floor"></div><div class="hof-trophies" id="hof-podium"></div></div>
         <div class="hof-side" id="hof-detail"></div>
-        <div class="hof-section">GW CHAMPIONS</div>
-        <div class="hof-gwstrip" id="hof-gw"></div>
         <div class="hof-section">RECORDS</div>
         <div id="hof-list"></div>
       </div>
@@ -583,7 +595,9 @@
           gwFinished: data.gwFinished,
           gwDataChecked: data.gwDataChecked,
           currentLeaders: data.currentLeaders,
+          currentGameweek: data.currentGameweek,
         };
+        renderFeed();
         renderBanner();
 
         statusEl.style.display = 'none';
@@ -652,31 +666,49 @@
       }
     }
 
-    async function loadFeed() {
+    let feedData = null;
+
+    function renderFeed() {
       const statusEl = document.getElementById('feed-status');
       const listEl = document.getElementById('feed-list');
+      if (!feedData) return;
 
+      const cards = [];
+      // การ์ดสด: สัปดาห์ปัจจุบันที่ยังไม่ล็อก ยังไม่นับเป็นแชมป์จริง
+      const st = standingsState;
+      if (st && st.currentGameweek && !st.currentGameweekLocked && st.currentLeaders && st.currentLeaders.length > 0) {
+        const names = st.currentLeaders.map((l) => hofEsc(l.teamName)).join(' + ');
+        cards.push(`
+          <div class="feed-card glass live">
+            <div class="feed-gw">Gameweek ${st.currentGameweek} · <span>● LIVE</span></div>
+            <div class="feed-head"><div class="feed-win">${names}</div><div class="feed-pts">${st.currentLeaders[0].gwPoints} แต้ม</div></div>
+            <div class="feed-msg" style="color:var(--muted-strong)">กำลังนำอยู่ตอนนี้ · ยังไม่ล็อกผล ยังไม่นับเป็นแชมป์</div>
+          </div>`);
+      }
+      for (const f of feedData.feed) {
+        const money = f.bonusEach ? ` · 💰 ${f.bonusEach.toLocaleString('en-US')}` : '';
+        cards.push(`
+          <div class="feed-card glass ${f.type}">
+            <div class="feed-gw">Gameweek ${f.gameweek}</div>
+            <div class="feed-head"><div class="feed-win">${f.winners.map(hofEsc).join(' + ')}</div><div class="feed-pts">${f.points ?? '-'} แต้ม${money}</div></div>
+            <div class="feed-msg">${f.message}</div>
+          </div>`);
+      }
+      if (cards.length === 0) {
+        statusEl.textContent = 'ยังไม่มีไฮไลท์ รอ gameweek แรกจบก่อนนะครับ';
+        return;
+      }
+      listEl.innerHTML = cards.join('');
+      statusEl.style.display = 'none';
+    }
+
+    async function loadFeed() {
+      const statusEl = document.getElementById('feed-status');
       try {
         const res = await fetch('/api/feed');
         if (!res.ok) throw new Error('โหลดข้อมูลไม่สำเร็จ');
-        const data = await res.json();
-
-        if (data.feed.length === 0) {
-          statusEl.textContent = 'ยังไม่มีไฮไลท์ รอ gameweek แรกจบก่อนนะครับ';
-          return;
-        }
-
-        listEl.innerHTML = data.feed
-          .map(
-            (f) => `
-          <div class="feed-card glass ${f.type}">
-            <div class="feed-gw">Gameweek ${f.gameweek}</div>
-            <div class="feed-msg">${f.message}</div>
-          </div>`
-          )
-          .join('');
-
-        statusEl.style.display = 'none';
+        feedData = await res.json();
+        renderFeed();
       } catch (err) {
         statusEl.textContent = 'เกิดข้อผิดพลาด: ' + err.message;
       }
@@ -736,10 +768,6 @@
         );
         renderHofDetail(awards);
 
-        document.getElementById('hof-gw').innerHTML = (data.gwWinners || [])
-          .map((g) => `<div class="hof-gwitem">GW${g.gameweek}<b>${g.names.map(hofEsc).join(' + ')}</b><span>${g.points} แต้ม${g.names.length > 1 ? ' · เสมอ' : ''}</span></div>`)
-          .join('');
-
         document.getElementById('hof-list').innerHTML = data.cards
           .filter((c) => c.icon !== '💯')
           .map(
@@ -761,17 +789,81 @@
       }
     }
 
+    const CHART_COLORS = ['#f6dc9b', '#7dc4ff', '#7dffb3', '#ff9a6a', '#c79bff', '#ff6a9a', '#5fe0d0', '#e0e06a', '#ff6a6a', '#9ab0ff', '#d9a0ff', '#b0b0b0'];
+    let chartData = null;
+    const chartOff = new Set();
+
+    function drawChart() {
+      const { gameweeks, players } = chartData;
+      const svg = document.getElementById('chart-svg');
+      const W = 420, H = 250, L = 42, R = 12, T = 10, B = 26;
+      const n = gameweeks.length;
+      const maxRaw = Math.max(1000, ...players.map((p) => p.total));
+      const step = maxRaw > 8000 ? 2000 : 1000;
+      const max = Math.ceil(maxRaw / step) * step;
+      const x = (i) => (n === 1 ? (L + W - R) / 2 : L + ((W - L - R) * i) / (n - 1));
+      const y = (v) => T + (H - T - B) * (1 - v / max);
+      let g = '';
+      for (let v = 0; v <= max; v += step) {
+        g += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="rgba(217,173,91,.15)"/><text x="${L - 5}" y="${y(v) + 3}" fill="#a99a80" font-size="9" text-anchor="end">${v.toLocaleString('en-US')}</text>`;
+      }
+      gameweeks.forEach((gw, i) => {
+        g += `<text x="${x(i)}" y="${H - 8}" fill="#a99a80" font-size="9" text-anchor="middle">${gw}</text>`;
+      });
+      players.forEach((p, j) => {
+        if (chartOff.has(p.entryId)) return;
+        const c = CHART_COLORS[j % CHART_COLORS.length];
+        // เส้นแบบขั้นบันได เพราะเงินเพิ่มเป็นก้อนในสัปดาห์ที่ชนะ
+        let d = `M${x(0)},${y(p.cumulative[0])}`;
+        for (let i = 1; i < n; i++) d += ` H${x(i)} V${y(p.cumulative[i])}`;
+        g += `<path d="${d}" fill="none" stroke="${c}" stroke-width="2.2" stroke-linejoin="round"/><circle cx="${x(n - 1)}" cy="${y(p.cumulative[n - 1])}" r="3.5" fill="${c}"/>`;
+      });
+      svg.innerHTML = g;
+      const legend = document.getElementById('chart-legend');
+      legend.innerHTML = players
+        .map((p, j) => `<button class="chart-lg ${chartOff.has(p.entryId) ? 'off' : ''}" data-id="${p.entryId}"><i style="background:${CHART_COLORS[j % CHART_COLORS.length]}"></i>${hofEsc(p.name)} · ${p.total.toLocaleString('en-US')}</button>`)
+        .join('');
+      legend.querySelectorAll('.chart-lg').forEach((b) =>
+        b.addEventListener('click', () => {
+          const id = Number(b.dataset.id);
+          chartOff.has(id) ? chartOff.delete(id) : chartOff.add(id);
+          drawChart();
+        })
+      );
+    }
+
+    async function loadChart() {
+      try {
+        const res = await fetch('/api/chart');
+        if (!res.ok) throw new Error('โหลดข้อมูลไม่สำเร็จ');
+        const data = await res.json();
+        if (!data.gameweeks.length || !data.players.length) {
+          return;
+        }
+        const first = !chartData;
+        chartData = data;
+        // ครั้งแรกแสดง 6 อันดับแรก ที่เหลือซ่อนไว้ให้แตะเปิดเอง (12 เส้นรกเกินไป)
+        if (first) data.players.slice(6).forEach((p) => chartOff.add(p.entryId));
+        drawChart();
+        document.getElementById('chart-box').style.display = 'block';
+      } catch (err) {
+        /* กราฟโหลดไม่ได้ก็ไม่ต้องแสดง ส่วนที่เหลือของหน้ายังใช้ได้ */
+      }
+    }
+
     loadDeadline();
     loadBadges().then(loadStandings);
     loadBonus();
     loadFeed();
     loadHof();
+    loadChart();
     setInterval(renderCountdown, 60 * 1000);
     setInterval(loadDeadline, 30 * 60 * 1000);
     setInterval(loadStandings, 2 * 60 * 1000);
     setInterval(loadBonus, 2 * 60 * 1000);
     setInterval(loadFeed, 5 * 60 * 1000);
     setInterval(loadHof, 5 * 60 * 1000);
+    setInterval(loadChart, 5 * 60 * 1000);
     setInterval(loadBadges, 5 * 60 * 1000);
   </script>
 </body>
