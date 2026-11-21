@@ -207,6 +207,27 @@ export default async function handler(req, res) {
       .filter((g) => g.names.length > 0)
       .sort((a, b) => b.gameweek - a.gameweek);
 
+    // 6) รองแชมป์บ่อยสุด: ที่ 2 ของแต่ละสัปดาห์ = คะแนนสูงเป็นอันดับสองของค่าที่ไม่ซ้ำกัน (ถ้าที่ 1 เสมอกัน ที่ 2 คือกลุ่มคะแนนถัดไป)
+    const secondCounts = {};
+    for (const rows of Object.values(byGameweek)) {
+      const distinct = [...new Set(rows.map((r) => r.gw_points))].sort((a, b) => b - a);
+      if (distinct.length < 2) continue;
+      for (const r of rows) {
+        if (r.gw_points === distinct[1]) secondCounts[r.entry_id] = (secondCounts[r.entry_id] || 0) + 1;
+      }
+    }
+    const maxSecond = Math.max(0, ...Object.values(secondCounts));
+    if (maxSecond >= 2) {
+      const names = Object.entries(secondCounts)
+        .filter(([, c]) => c === maxSecond)
+        .map(([id]) => nameOf[id] || `#${id}`);
+      cards.push({
+        icon: '🥈',
+        label: 'รองแชมป์บ่อยสุด',
+        value: `${joinNames(names)} — ได้ที่ 2 ของสัปดาห์ ${maxSecond} ครั้ง`,
+      });
+    }
+
     res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=900');
     return res.status(200).json({ updatedAt: new Date().toISOString(), awards: awards.filter(Boolean), gwWinners, cards });
   } catch (err) {
