@@ -5,7 +5,7 @@
 import { getSupabase } from '../lib/supabase.js';
 
 const STEAL_MESSAGES = [
-  '😱 {loser} นำมาทั้งสัปดาห์ดันพลาดท้ายเกม โดน {winner} ปาดหน้าเอารางวัลไปซะงั้น เจ็บจี๊ดเลย',
+  '😱 {loser} นำมาทั้งสัปดาห์ดันพลาดท้ายเกม โดน {winner} ปาดหน้าเอาแต้มไปซะงั้น เจ็บจี๊ดเลย',
   '🔪 {winner} แทงข้างหลัง {loser} ตอนใกล้จบเกม! อุตส่าห์นำมาทั้งอาทิตย์ สุดท้ายมือเปล่ากลับบ้าน',
   '💀 ดราม่าประจำสัปดาห์: {loser} นำอยู่ดีๆ โดน {winner} แซงหน้าตัดเส้นชัย ร้องไห้มุมห้องได้เลย',
   '⚡ หักมุมจบสัปดาห์! {loser} ชะล่าใจ {winner} ฉกแต้มไปต่อหน้าต่อตา',
@@ -18,9 +18,9 @@ const TIE_MESSAGES = [
 ];
 
 const NORMAL_MESSAGES = [
-  '🏆 {winner} กวาดรางวัลไปเต็มๆ ไม่มีใครสู้ได้',
+  '🏆 {winner} กวาดแต้มพิเศษไปเต็มๆ ไม่มีใครแตะต้องได้',
   '👑 {winner} ครองบัลลังก์สัปดาห์นี้ไปแบบไม่มีคู่แข่ง',
-  '🔥 {winner} ฟอร์มร้อนแรง เก็บรางวัลไปแบบสบายๆ',
+  '🔥 {winner} ฟอร์มร้อนแรง เก็บแต้มพิเศษไปแบบสบายๆ',
 ];
 
 function pick(list, seed) {
@@ -42,7 +42,7 @@ export default async function handler(req, res) {
 
     const { data: weekly, error: wErr } = await supabase
       .from('weekly_results')
-      .select('gameweek, entry_id, bonus_awarded')
+      .select('gameweek, entry_id, gw_points, bonus_awarded')
       .gt('bonus_awarded', 0);
     if (wErr) throw wErr;
 
@@ -55,9 +55,13 @@ export default async function handler(req, res) {
     for (const s of snapshots) snapshotByGw[s.gameweek] = s.leader_entry_ids.split(',').map(Number);
 
     const byGameweek = {};
+    const pointsByGw = {};
+    const bonusByGw = {};
     for (const w of weekly) {
       if (!byGameweek[w.gameweek]) byGameweek[w.gameweek] = [];
       byGameweek[w.gameweek].push(w.entry_id);
+      pointsByGw[w.gameweek] = w.gw_points;
+      bonusByGw[w.gameweek] = w.bonus_awarded;
     }
 
     const feed = Object.entries(byGameweek)
@@ -67,7 +71,7 @@ export default async function handler(req, res) {
 
         if (winnerIds.length > 1) {
           const message = fillTemplate(pick(TIE_MESSAGES, gameweek), { teams: winnerNames.join(' และ ') });
-          return { gameweek, type: 'tie', winners: winnerNames, message };
+          return { gameweek, type: 'tie', winners: winnerNames, points: pointsByGw[gameweek], bonusEach: bonusByGw[gameweek], message };
         }
 
         const snapshotIds = snapshotByGw[gameweek];
@@ -80,11 +84,11 @@ export default async function handler(req, res) {
             winner: winnerNames[0],
             loser: loserNames,
           });
-          return { gameweek, type: 'steal', winners: winnerNames, formerLeaders: loserNames, message };
+          return { gameweek, type: 'steal', winners: winnerNames, formerLeaders: loserNames, points: pointsByGw[gameweek], bonusEach: bonusByGw[gameweek], message };
         }
 
         const message = fillTemplate(pick(NORMAL_MESSAGES, gameweek), { winner: winnerNames[0] });
-        return { gameweek, type: 'normal', winners: winnerNames, message };
+        return { gameweek, type: 'normal', winners: winnerNames, points: pointsByGw[gameweek], bonusEach: bonusByGw[gameweek], message };
       })
       .sort((a, b) => b.gameweek - a.gameweek);
 
