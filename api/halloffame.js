@@ -150,8 +150,65 @@ export default async function handler(req, res) {
       });
     }
 
+
+    // ===== ห้องถ้วยรางวัล (awards) =====
+    const people = {};
+    for (const w of weekly) {
+      const p = (people[w.entry_id] ||= { entryId: w.entry_id, name: nameOf[w.entry_id] || `#${w.entry_id}`, points: 0, weeks: 0, best: 0, bestGw: null, bonus: 0 });
+      p.points += w.gw_points;
+      p.weeks += 1;
+      p.bonus += w.bonus_awarded;
+      if (w.gw_points > p.best) { p.best = w.gw_points; p.bestGw = w.gameweek; }
+    }
+    const list = Object.values(people).map((p) => ({
+      ...p,
+      avg: p.weeks ? p.points / p.weeks : 0,
+      solo: (winsByEntry[p.entryId] || {}).solo || 0,
+      draw: (winsByEntry[p.entryId] || {}).draw || 0,
+    }));
+    const byBonus = [...list].sort((a, b) => b.bonus - a.bonus || b.points - a.points);
+    const rankOfBonus = {};
+    byBonus.forEach((p, i) => { rankOfBonus[p.entryId] = i + 1; });
+    const fmt = (n) => Math.round(n).toLocaleString('en-US');
+    const make = (key, icon, title, sub, p, desc, extra) =>
+      p && {
+        key, icon, title, sub, desc, name: p.name,
+        rank: rankOfBonus[p.entryId],
+        stats: [
+          { label: 'รายได้สะสม', value: fmt(p.bonus) },
+          { label: 'คะแนนรวม', value: fmt(p.points) },
+          { label: 'GW สูงสุด', value: `${p.best}${p.bestGw ? ` (GW${p.bestGw})` : ''}` },
+          { label: 'เฉลี่ย/สัปดาห์', value: p.avg.toFixed(1) },
+        ],
+        extra: extra || `ชนะเดี่ยว ${p.solo} ครั้ง · เสมอ ${p.draw} ครั้ง`,
+      };
+    const awards = [];
+    if (list.length > 0) {
+      const golden = [...list].sort((a, b) => b.points - a.points)[0];
+      const champion = byBonus[0];
+      const runner = byBonus[1];
+      const spoon = [...list].sort((a, b) => a.avg - b.avg)[0];
+      const mots = [...list].sort((a, b) => b.best - a.best || b.points - a.points)[0];
+      awards.push(
+        make('golden', '🏆', 'GOLDEN MANAGER', 'TOP POINTS', golden, 'ผู้จัดการที่ทำคะแนน FPL รวมสูงที่สุดในลีกตอนนี้'),
+        make('runner', '🥈', 'RUNNER-UP', '2ND PLACE', runner, 'อันดับ 2 ของรายได้สะสม ตามหลังแชมป์อยู่ไม่ไกล'),
+        make('champion', '🏆', 'LEAGUE CHAMPION', 'MOST EARNINGS', champion, 'ผู้นำรายได้สะสมสูงสุดของลีกตอนนี้ ใครจะแซงได้ต้องมาลุ้นกันต่อ'),
+        make('spoon', '🥄', 'WOODEN SPOON', 'LOWEST AVERAGE', spoon, 'คะแนนเฉลี่ยต่อสัปดาห์ต่ำที่สุดในลีก (สู้ต่อไปนะ)'),
+        make('mots', '🛡️', 'BEST WEEK', 'HIGHEST SINGLE GW', mots, 'ทำคะแนนในหนึ่งสัปดาห์สูงที่สุดในลีก')
+      );
+    }
+
+    const gwWinners = Object.entries(byGameweek)
+      .map(([gw, rows]) => ({
+        gameweek: Number(gw),
+        names: rows.filter((r) => r.bonus_awarded > 0).map((r) => nameOf[r.entry_id] || `#${r.entry_id}`),
+        points: Math.max(...rows.map((r) => r.gw_points)),
+      }))
+      .filter((g) => g.names.length > 0)
+      .sort((a, b) => b.gameweek - a.gameweek);
+
     res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=900');
-    return res.status(200).json({ updatedAt: new Date().toISOString(), cards });
+    return res.status(200).json({ updatedAt: new Date().toISOString(), awards: awards.filter(Boolean), gwWinners, cards });
   } catch (err) {
     return res.status(500).json({ error: 'Failed to load hall of fame', detail: err.message });
   }
