@@ -9,21 +9,21 @@
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --accent: #5fe0ff;
+    --accent: #e6c47d;
     --live: #ff6a6a;
-    --gold: #ffd54a;
-    --glass-bg: rgba(255,255,255,0.06);
-    --glass-bg-soft: rgba(255,255,255,0.045);
-    --glass-border: rgba(255,255,255,0.14);
-    --text: #ffffff;
-    --muted: rgba(255,255,255,0.5);
-    --muted-strong: rgba(255,255,255,0.65);
+    --gold: #f6dc9b;
+    --glass-bg: rgba(20,17,13,0.82);
+    --glass-bg-soft: rgba(20,17,13,0.7);
+    --glass-border: rgba(217,173,91,0.32);
+    --text: #f5eee1;
+    --muted: #a99a80;
+    --muted-strong: #c7b99e;
   }
   * { box-sizing: border-box; }
   html, body { height: 100%; }
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background: linear-gradient(160deg, #0f1b2e 0%, #122a24 100%);
+    background: radial-gradient(ellipse at 50% 0%, #3b2a16 0, #17130f 40%, #080909 85%);
     background-attachment: fixed;
     color: var(--text);
     margin: 0;
@@ -34,10 +34,11 @@
 
   .glass {
     background: var(--glass-bg);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     border: 1px solid var(--glass-border);
     border-radius: 16px;
+    box-shadow: 0 8px 22px rgba(0,0,0,.45);
   }
 
   .header { padding: 14px 16px; margin-bottom: 12px; }
@@ -45,7 +46,7 @@
   .eyebrow .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: pulse 1.4s ease-in-out infinite; }
   @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
   .eyebrow span.label { font-size: 10px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; }
-  h1 { font-size: 18px; font-weight: 700; margin: 0; color: #fff; }
+  h1 { font-family: Georgia, 'Times New Roman', serif; font-size: 19px; font-weight: 700; margin: 0; color: #f3d99e; letter-spacing: 1px; text-shadow: 0 2px 14px rgba(183,121,46,.6); }
   .sub { color: var(--muted); font-size: 12px; margin-top: 3px; }
 
   .banner {
@@ -65,7 +66,7 @@
   .banner .pending-title { font-size: 12.5px; font-weight: 600; color: var(--gold); }
   .banner .confirmed-title { font-size: 12.5px; font-weight: 600; color: var(--accent); }
   .banner .pending-sub { font-size: 11px; color: var(--muted); }
-  .banner.celebrate { background: rgba(255,213,74,0.1); }
+  .banner.celebrate { background: linear-gradient(90deg, rgba(217,173,91,0.22), rgba(20,17,13,0.82)); }
   .banner .celebrate-icon { font-size: 18px; flex-shrink: 0; }
   .banner .celebrate-title { font-size: 12.5px; font-weight: 700; color: var(--gold); }
 
@@ -82,7 +83,7 @@
     cursor: pointer;
     transition: background 0.15s, color 0.15s;
   }
-  .tab-btn.active { background: rgba(255,255,255,0.14); color: #fff; }
+  .tab-btn.active { background: rgba(217,173,91,0.16); color: #f6dc9b; box-shadow: inset 0 0 0 1px rgba(217,173,91,0.5); }
   .tab-panel { display: none; }
   .tab-panel.active { display: block; }
 
@@ -92,10 +93,10 @@
     align-items: center;
     justify-content: space-between;
     padding: 11px 12px;
-    border-bottom: 1px solid rgba(255,255,255,0.07);
+    border-bottom: 1px solid rgba(217,173,91,0.14);
   }
   .row:last-child { border-bottom: none; }
-  .row.rank-1 { background: rgba(255,213,74,0.08); }
+  .row.rank-1 { background: linear-gradient(90deg, rgba(217,173,91,0.2), rgba(217,173,91,0.04)); }
 
   .row-left { display: flex; align-items: center; gap: 9px; min-width: 0; }
   .rank { width: 24px; text-align: center; font-size: 12px; color: var(--muted); flex-shrink: 0; }
@@ -111,13 +112,13 @@
     text-align: center;
     padding: 3px 0;
     border-radius: 7px;
-    background: rgba(255,255,255,0.09);
+    background: rgba(255,255,255,0.07);
     font-family: 'Rajdhani', sans-serif;
     font-weight: 700;
     font-size: 13px;
     color: #fff;
   }
-  .score-chip.accent { background: rgba(95,224,255,0.14); color: var(--accent); }
+  .score-chip.accent { background: rgba(217,173,91,0.18); color: var(--accent); }
 
   .live-badge, .win-badge, .draw-badge {
     display: inline-block;
@@ -131,19 +132,19 @@
   }
   .live-badge { color: var(--live); background: rgba(255,106,106,0.15); animation: pulse 1.4s ease-in-out infinite; }
   .win-badge { color: #7dffb3; background: rgba(125,255,179,0.15); }
-  .draw-badge { color: var(--accent); background: rgba(95,224,255,0.15); }
+  .draw-badge { color: var(--accent); background: rgba(217,173,91,0.18); }
 
   .status { color: var(--muted); font-size: 12.5px; padding: 22px 0; text-align: center; }
   .updated { color: var(--muted); font-size: 10.5px; margin-top: 8px; text-align: right; padding: 0 2px; }
   .footnote { color: var(--muted); font-size: 11.5px; margin-top: 22px; line-height: 1.6; padding: 12px 14px; }
 
-  .squad-row-wrap { padding: 10px 12px 12px; border-bottom: 1px solid rgba(255,255,255,0.07); }
+  .squad-row-wrap { padding: 10px 12px 12px; border-bottom: 1px solid rgba(217,173,91,0.14); }
   .squad-section-title { font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); margin: 6px 0 5px; }
   .squad-section-title:first-child { margin-top: 0; }
   .squad-players { display: flex; flex-wrap: wrap; gap: 5px; }
   .player-chip {
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(217,173,91,0.22);
     border-radius: 6px;
     padding: 3px 7px;
     font-size: 11px;
