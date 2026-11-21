@@ -224,7 +224,7 @@ export default async function handler(req, res) {
       cards.push({
         icon: '🥈',
         label: 'รองแชมป์บ่อยสุด',
-        value: `${joinNames(names)} — รองแชมป์ ${maxSecond}`,
+        value: `${joinNames(names)} — รองแชมป์ ${maxSecond} ครั้ง`,
       });
     }
 
