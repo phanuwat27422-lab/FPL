@@ -184,16 +184,16 @@ export default async function handler(req, res) {
       };
     const awards = [];
     if (list.length > 0) {
-      const golden = [...list].sort((a, b) => b.points - a.points)[0];
+      const golden = [...list].sort((a, b) => b.avg - a.avg || b.points - a.points)[0];
       const champion = byBonus[0];
       const runner = byBonus[1];
       const spoon = [...list].sort((a, b) => a.avg - b.avg)[0];
       const mots = [...list].sort((a, b) => b.best - a.best || b.points - a.points)[0];
       awards.push(
-        make('golden', '🏆', 'GOLDEN MANAGER', 'TOP POINTS', golden, 'ผู้จัดการที่ทำคะแนน FPL รวมสูงที่สุดในลีกตอนนี้'),
+        make('golden', '🏆', 'GOLDEN MANAGER', 'HIGHEST AVERAGE', golden, golden && `คะแนนเฉลี่ยต่อสัปดาห์สูงที่สุดในลีก (${fmt(golden.points)} ÷ ${golden.weeks} สัปดาห์ = ${golden.avg.toFixed(1)})`),
         make('runner', '🥈', 'RUNNER-UP', '2ND PLACE', runner, 'อันดับ 2 ของรายได้สะสม ตามหลังแชมป์อยู่ไม่ไกล'),
         make('champion', '🏆', 'LEAGUE CHAMPION', 'MOST EARNINGS', champion, 'ผู้นำรายได้สะสมสูงสุดของลีกตอนนี้ ใครจะแซงได้ต้องมาลุ้นกันต่อ'),
-        make('spoon', '🥄', 'WOODEN SPOON', 'LOWEST AVERAGE', spoon, 'คะแนนเฉลี่ยต่อสัปดาห์ต่ำที่สุดในลีก (สู้ต่อไปนะ)'),
+        make('spoon', '🥄', 'WOODEN SPOON', 'LOWEST AVERAGE', spoon, spoon && `คะแนนเฉลี่ยต่อสัปดาห์ต่ำที่สุดในลีก (${fmt(spoon.points)} ÷ ${spoon.weeks} สัปดาห์ = ${spoon.avg.toFixed(1)}) สู้ต่อไปนะ`),
         make('mots', '🛡️', 'BEST WEEK', 'HIGHEST SINGLE GW', mots, 'ทำคะแนนในหนึ่งสัปดาห์สูงที่สุดในลีก')
       );
     }
