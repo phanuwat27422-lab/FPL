@@ -228,8 +228,10 @@
   .hof-gwitem { flex: 0 0 auto; min-width: 104px; background: #1a1712; border: 1px solid #51402a; border-radius: 10px; padding: 10px 12px; color: #e7d3a8; font-size: 10px; letter-spacing: 1px; }
   .hof-gwitem b { display: block; margin-top: 4px; color: #fff; font-size: 12px; letter-spacing: 0; }
   .hof-gwitem span { display: block; margin-top: 2px; color: var(--hg); font-size: 11px; letter-spacing: 0; }
-  #hof-stage .hof-card { border-color: #51402a; background: rgba(26,23,18,.7); }
-  #hof-stage .hof-label { color: var(--hg); }
+  #hof-stage .hof-card { border: 1px solid #624923; border-radius: 12px; background: linear-gradient(145deg, #181511, #0b0a09); backdrop-filter: none; -webkit-backdrop-filter: none; box-shadow: 0 6px 14px #0008; padding: 13px 14px; }
+  #hof-stage .hof-icon { font-size: 24px; filter: drop-shadow(0 0 8px #e6b75c88); }
+  #hof-stage .hof-label { color: var(--hg); letter-spacing: 1px; }
+  #hof-stage .hof-value { color: #f5eee1; }
 
   .badge-icon { font-size: 12px; margin-left: 3px; cursor: pointer; }
   .badge-tooltip {
@@ -723,6 +725,7 @@
           .join('');
 
         document.getElementById('hof-list').innerHTML = data.cards
+          .filter((c) => c.icon !== '💯')
           .map(
             (c) => `
           <div class="hof-card glass">
