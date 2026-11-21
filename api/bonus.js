@@ -3,7 +3,7 @@
 // ตารางโบนัสสะสม: ยอดจริงที่ล็อกแล้ว (permanent) + แต้มคาดการณ์สดของสัปดาห์ที่ยังไม่จบ (liveBonus)
 // liveBonus ไม่เคยถูกบันทึกลง database เป็นแค่ตัวเลขคาดการณ์ให้ดูสนุกระหว่างสัปดาห์เท่านั้น
 //
-// สูตรโบนัส: pool ต่อสัปดาห์ = 150 x (จำนวนผู้เล่นทั้งหมด - 1) หารเท่ากันตามจำนวนผู้ชนะ
+// สูตรโบนัส: pool ต่อสัปดาห์ = 150 x (จำนวนผู้เล่นทั้งหมด - จำนวนผู้ชนะ) เพราะผู้ชนะไม่ต้องจ่าย หารเท่ากันตามจำนวนผู้ชนะ
 // ตัวเงินจึงไม่คงที่ 150 อีกต่อไป การนับ "ชนะกี่ครั้ง" เลยดูจากจำนวนคนที่ชนะร่วมกันในแต่ละสัปดาห์แทน
 // (ไม่ใช่หารด้วยค่าคงที่) เพื่อไม่ให้ผูกติดกับจำนวนเงินที่เปลี่ยนได้
 
@@ -76,7 +76,7 @@ export default async function handler(req, res) {
 
           if (maxPoints > 0) {
             const liveWinners = entries.filter((e) => e.event_total === maxPoints);
-            const livePool = 150 * (entries.length - 1);
+            const livePool = 150 * (entries.length - liveWinners.length);
             const liveBonusEach = Math.floor(livePool / liveWinners.length);
 
             for (const w of liveWinners) {
